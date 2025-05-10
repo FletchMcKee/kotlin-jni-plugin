@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "kotlin-jni-plugin"
+rootProject.name = "ktjni"
 include(":plugin")

@@ -1,4 +1,4 @@
-package io.github.fletchmckee.kotlinjni
+package io.github.fletchmckee.ktjni
 
 class KotlinJniPlugin {
     init {
