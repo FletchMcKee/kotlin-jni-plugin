@@ -5,7 +5,10 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-  id("java-library")
+  `kotlin-dsl`
+  `java-gradle-plugin`
+  `maven-publish`
+  alias(libs.plugins.kotlinApiDump)
 }
 
 java {
@@ -13,17 +16,26 @@ java {
   targetCompatibility = JavaVersion.VERSION_11
 }
 
-configureSpotless()
-
 tasks.withType<KotlinCompile>().configureEach {
   compilerOptions {
     jvmTarget.set(JvmTarget.JVM_11)
   }
 }
 
+configureSpotless()
+
 dependencies {
   implementation(gradleApi())
   implementation(localGroovy())
   implementation(libs.asm)
   implementation(libs.asm.util)
+}
+
+gradlePlugin {
+  plugins {
+    create("generateKtjni") {
+      id = "io.github.fletchmckee.ktjni"
+      implementationClass = "io.github.fletchmckee.ktjni.KotlinJniPlugin"
+    }
+  }
 }

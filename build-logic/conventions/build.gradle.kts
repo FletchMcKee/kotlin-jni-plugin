@@ -25,11 +25,6 @@ dependencies {
 
 gradlePlugin {
   plugins {
-    create("generateKtjni") {
-      id = "io.github.fletchmckee.ktjni"
-      implementationClass = "io.github.fletchmckee.ktjni.KotlinJniPlugin"
-    }
-
     register("root") {
       id = libs.plugins.ktjni.root.get().pluginId
       implementationClass = "io.github.fletchmckee.ktjni.RootConventionPlugin"

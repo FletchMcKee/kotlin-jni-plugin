@@ -12,6 +12,7 @@ asm-util = { module = "org.ow2.asm:asm-util", version.ref = "asm" }
 spotless-gradlePlugin = { module = "com.diffplug.spotless:spotless-plugin-gradle", version.ref = "spotless" }
 
 [plugins]
-jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+kotlinApiDump = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version = "0.17.0" }
+# Custom
 ktjni-root = { id = "ktjni.root" }
