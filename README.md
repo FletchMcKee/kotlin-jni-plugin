@@ -1,2 +1,2 @@
-# kotlin-jni-plugin
+# Kotlin JNI Plugin
 Kotlin Gradle plugin for generating JNI headers
