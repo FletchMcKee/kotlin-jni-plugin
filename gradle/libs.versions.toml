@@ -1,6 +1,14 @@
 [versions]
 kotlin = "2.1.21"
 jetbrainsKotlinJvm = "2.0.21"
+ktlint = "1.5.0"
+spotless = "7.0.3"
+
+[libraries]
+# Build logic dependencies
+spotless-gradlePlugin = { module = "com.diffplug.spotless:spotless-plugin-gradle", version.ref = "spotless" }
 
 [plugins]
 jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+ktjni-root = { id = "ktjni.root" }

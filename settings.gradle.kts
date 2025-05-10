@@ -1,18 +1,24 @@
+// Copyright 2025, Colin McKee
+// SPDX-License-Identifier: Apache-2.0
 pluginManagement {
-    repositories {
-        gradlePluginPortal()
-        mavenCentral()
-        google()
-    }
+  includeBuild("build-logic")
+  repositories {
+    google()
+    mavenCentral()
+    gradlePluginPortal()
+  }
 }
 
 @Suppress("UnstableApiUsage")
 dependencyResolutionManagement {
-    repositories {
-        mavenCentral()
-        google()
-    }
+  repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+  repositories {
+    google()
+    mavenCentral()
+  }
 }
 
 rootProject.name = "ktjni"
+
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 include(":plugin")
