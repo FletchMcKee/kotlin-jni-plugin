@@ -6,7 +6,6 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
   id("java-library")
-  alias(libs.plugins.jetbrains.kotlin.jvm)
 }
 
 java {
@@ -20,4 +19,11 @@ tasks.withType<KotlinCompile>().configureEach {
   compilerOptions {
     jvmTarget.set(JvmTarget.JVM_11)
   }
+}
+
+dependencies {
+  implementation(gradleApi())
+  implementation(localGroovy())
+  implementation(libs.asm)
+  implementation(libs.asm.util)
 }
