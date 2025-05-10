@@ -16,5 +16,5 @@ dependencies {
   implementation(gradleApi())
   implementation(localGroovy())
   implementation("org.ow2.asm:asm:9.7")
-  implementation("org.ow2.asm:asm-util:9.7")
+  implementation("org.ow2.asm:asm-util:9.8")
 }
