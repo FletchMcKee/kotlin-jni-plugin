@@ -15,6 +15,6 @@ version = "1.0.0-SNAPSHOT"
 dependencies {
   implementation(gradleApi())
   implementation(localGroovy())
-  implementation("org.ow2.asm:asm:9.7")
+  implementation("org.ow2.asm:asm:9.8")
   implementation("org.ow2.asm:asm-util:9.8")
 }
