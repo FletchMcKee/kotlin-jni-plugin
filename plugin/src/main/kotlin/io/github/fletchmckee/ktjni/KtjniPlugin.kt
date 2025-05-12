@@ -7,6 +7,7 @@ import org.gradle.api.Project
 import org.gradle.api.logging.LogLevel.INFO
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompile
 
+@Suppress("unused") // Invoked reflectively
 public class KtjniPlugin : Plugin<Project> {
   override fun apply(project: Project) {
     project.gradle.projectsEvaluated {
@@ -14,7 +15,7 @@ public class KtjniPlugin : Plugin<Project> {
         .withType(AbstractKotlinCompile::class.java)
         .forEach { compileTask ->
           val classDir = compileTask.destinationDirectory
-          val taskName = "generateJniHeaders${compileTask.name.replaceFirstChar { it.uppercase() }}"
+          val taskName = "generateJniHeaders${compileTask.name.replaceFirstChar(Char::uppercase)}"
           project.logger.log(INFO, "KtjniPlugin classDir: ${classDir.asFile.get().absolutePath} taskName: $taskName")
           project.tasks.register(taskName, GenerateJniHeaders::class.java) {
             sourceDir.set(classDir)

@@ -4,7 +4,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.initialization.Settings
 
-@Suppress("unused") // Accessed reflectively
+@Suppress("unused") // Invoked reflectively
 class KtjniSettingsPlugin : Plugin<Settings> {
   override fun apply(target: Settings) {
     val applyKtjniBuildPlugin: (Project) -> Unit = { project ->

@@ -4,10 +4,15 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
+  kotlin("jvm")
   `kotlin-dsl`
   `java-gradle-plugin`
   `maven-publish`
   alias(libs.plugins.kotlinApiDump)
+}
+
+kotlin {
+  explicitApi()
 }
 
 java {
