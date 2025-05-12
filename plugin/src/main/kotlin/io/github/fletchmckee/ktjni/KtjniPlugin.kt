@@ -10,19 +10,47 @@ import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompile
 @Suppress("unused") // Invoked reflectively
 public class KtjniPlugin : Plugin<Project> {
   override fun apply(project: Project) {
+    val aggregate = project.tasks.register("generateJniHeaders") {
+      group = GROUP
+      description = "Generates JNI headers for all Kotlin compile tasks"
+    }
+
     project.gradle.projectsEvaluated {
       project.tasks
         .withType(AbstractKotlinCompile::class.java)
         .forEach { compileTask ->
+          val compileTaskProvider = project.tasks.named(compileTask.name, AbstractKotlinCompile::class.java)
           val classDir = compileTask.destinationDirectory
           val taskName = "generateJniHeaders${compileTask.name.replaceFirstChar(Char::uppercase)}"
-          project.logger.log(INFO, "KtjniPlugin classDir: ${classDir.asFile.get().absolutePath} taskName: $taskName")
-          project.tasks.register(taskName, GenerateJniHeaders::class.java) {
+          project.logger.log(
+            INFO,
+            """
+              =====================================================
+              KtjniPlugin apply
+                - classDir: ${classDir.asFile.get().absolutePath}
+                - taskName: $taskName
+              =====================================================
+            """.trimIndent(),
+          )
+
+          val generateJniHeadersTask = project.tasks.register(
+            taskName,
+            GenerateJniHeaders::class.java,
+          ) {
             sourceDir.set(classDir)
-            outputDir.set(project.layout.buildDirectory.dir("generated/jni-headers/${compileTask.name}"))
-            dependsOn(compileTask)
+            outputDir.set(project.layout.buildDirectory.dir("generated/jni-headers"))
+            group = GROUP
+            description = "Generates JNI headers from class files after ${compileTask.name}"
           }
+
+          generateJniHeadersTask.configure { dependsOn(compileTaskProvider) }
+
+          aggregate.configure { dependsOn(generateJniHeadersTask) }
         }
     }
+  }
+
+  private companion object {
+    const val GROUP = "ktjni"
   }
 }
