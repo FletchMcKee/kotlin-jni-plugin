@@ -14,7 +14,12 @@ fun Project.configureSpotless() {
 
     kotlin {
       target("src/**/*.kt")
-      ktlint(ktlintVersion)
+      ktlint(ktlintVersion).editorConfigOverride(
+        mapOf(
+          "ktlint_standard_filename" to "disabled",
+          "ktlint_function_naming_ignore_when_annotated_with" to "Composable",
+        )
+      )
       licenseHeaderFile(rootProject.file("spotless/copyright.txt"))
     }
 

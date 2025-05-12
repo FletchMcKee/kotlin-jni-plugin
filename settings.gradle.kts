@@ -21,4 +21,9 @@ dependencyResolutionManagement {
 rootProject.name = "ktjni"
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
-include(":plugin")
+
+include(
+  ":plugin",
+  ":samples:demo",
+  ":samples:simple",
+)

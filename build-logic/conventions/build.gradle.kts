@@ -3,8 +3,6 @@ plugins {
   alias(libs.plugins.spotless)
 }
 
-group = "io.github.fletchmckee.build-logic"
-
 spotless {
   kotlin {
     target("src/**/*.kt")
@@ -21,6 +19,8 @@ spotless {
 
 dependencies {
   compileOnly(libs.spotless.gradlePlugin)
+  // Expose the generated version catalog API to the plugin.
+  //implementation(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
 }
 
 gradlePlugin {
