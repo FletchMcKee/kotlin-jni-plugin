@@ -1,8 +1,9 @@
 .idea/*
 !.idea/copyright
-
+.kotlin
 .gradle
 build
 /reports
 
 local.properties
+/samples/simple/.cxx/

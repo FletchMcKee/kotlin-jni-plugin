@@ -1,14 +1,18 @@
 // Copyright 2025, Colin McKee
 // SPDX-License-Identifier: Apache-2.0
-import io.github.fletchmckee.ktjni.configureSpotless
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
+  kotlin("jvm")
   `kotlin-dsl`
   `java-gradle-plugin`
   `maven-publish`
   alias(libs.plugins.kotlinApiDump)
+}
+
+kotlin {
+  explicitApi()
 }
 
 java {
@@ -22,20 +26,19 @@ tasks.withType<KotlinCompile>().configureEach {
   }
 }
 
-configureSpotless()
-
 dependencies {
   implementation(gradleApi())
   implementation(localGroovy())
   implementation(libs.asm)
   implementation(libs.asm.util)
+  implementation(libs.kotlin.gradle.plugin)
 }
 
 gradlePlugin {
   plugins {
-    create("generateKtjni") {
+    create("ktjni") {
       id = "io.github.fletchmckee.ktjni"
-      implementationClass = "io.github.fletchmckee.ktjni.KotlinJniPlugin"
+      implementationClass = "io.github.fletchmckee.ktjni.KtjniPlugin"
     }
   }
 }
