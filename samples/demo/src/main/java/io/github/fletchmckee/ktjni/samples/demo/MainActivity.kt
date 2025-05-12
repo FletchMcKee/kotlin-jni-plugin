@@ -24,7 +24,7 @@ class MainActivity : ComponentActivity() {
       KtjniTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
           Greeting(
-            name = NativeLib().stringFromJNI(),
+            greeting = NativeLib().stringFromJNI(),
             modifier = Modifier.padding(innerPadding),
           )
         }
@@ -34,9 +34,9 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
+fun Greeting(greeting: String, modifier: Modifier = Modifier) {
   Text(
-    text = "Hello $name!",
+    text = greeting,
     modifier = modifier,
   )
 }

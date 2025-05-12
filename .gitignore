@@ -4,6 +4,6 @@
 .gradle
 build
 /reports
-
+.DS_Store
 local.properties
 /samples/simple/.cxx/
