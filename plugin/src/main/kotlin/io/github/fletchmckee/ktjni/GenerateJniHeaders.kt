@@ -43,6 +43,7 @@ constructor() : DefaultTask() {
         generateJniHeaders invoked
           - sourceDir: ${srcDir.absolutePath}
           - outputDir: ${outputDir.asFile.get().absolutePath}
+            - output in build directory: ${outputDir.inBuildDirectory(project)}
         =====================================================
       """.trimIndent(),
     )
