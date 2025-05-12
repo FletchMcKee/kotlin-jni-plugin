@@ -50,7 +50,7 @@ public class KtjniPlugin : Plugin<Project> {
     }
   }
 
-  private companion object {
-    const val GROUP = "ktjni"
+  internal companion object {
+    internal const val GROUP = "ktjni"
   }
 }
