@@ -1,4 +1,4 @@
-public final class io/github/fletchmckee/ktjni/KotlinJniPlugin : org/gradle/api/Plugin {
+public final class io/github/fletchmckee/ktjni/KtjniPlugin : org/gradle/api/Plugin {
 	public fun <init> ()V
 	public synthetic fun apply (Ljava/lang/Object;)V
 	public fun apply (Lorg/gradle/api/Project;)V
