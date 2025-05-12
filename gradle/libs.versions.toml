@@ -25,12 +25,14 @@ asm = { module = "org.ow2.asm:asm", version.ref = "asm" }
 asm-util = { module = "org.ow2.asm:asm-util", version.ref = "asm" }
 # Build logic dependencies
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlinGradlePlugin" }
-ktjni-gradle-plugin = { module = "io.github.fletchmckee.ktjni:plugin", version.ref = "pluginVersion" }
+
+ktjni-build-plugin = { module = "io.github.fletchmckee.ktjni.build:gradle-plugin" }
+ktjni-gradle-plugin = { module = "io.github.fletchmckee.ktjni:plugin" }
+
 spotless-gradlePlugin = { module = "com.diffplug.spotless:spotless-plugin-gradle", version.ref = "spotless" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 runner = { group = "com.android.support.test", name = "runner", version.ref = "runner" }
 espresso-core = { group = "com.android.support.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
-appcompat-v7 = { group = "com.android.support", name = "appcompat-v7", version.ref = "appcompatV7" }
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCoreVersion" }
@@ -48,9 +50,6 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 [plugins]
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 kotlinApiDump = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version = "0.17.0" }
-# Custom
-ktjni-plugin = { id = "io.github.fletchmckee.ktjni", version = "1.0.0-SNAPSHOT" }
-ktjni-root = { id = "io.github.fletchmckee.ktjni.root" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlinVersion" }
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -8,11 +8,7 @@ plugins {
   `java-gradle-plugin`
   `maven-publish`
   alias(libs.plugins.kotlinApiDump)
-  alias(libs.plugins.ktjni.root)
 }
-
-group = "io.github.fletchmckee.ktjni"
-version = "1.0.0-SNAPSHOT"
 
 java {
   sourceCompatibility = JavaVersion.VERSION_11
@@ -39,11 +35,5 @@ gradlePlugin {
       id = "io.github.fletchmckee.ktjni"
       implementationClass = "io.github.fletchmckee.ktjni.KtjniPlugin"
     }
-  }
-}
-
-publishing {
-  repositories {
-    mavenLocal()
   }
 }

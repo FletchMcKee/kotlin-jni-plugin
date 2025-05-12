@@ -1,3 +1,5 @@
+// Copyright 2025, Colin McKee
+// SPDX-License-Identifier: Apache-2.0
 package io.github.fletchmckee.ktjni
 
 import com.diffplug.gradle.spotless.SpotlessExtension
@@ -18,7 +20,7 @@ fun Project.configureSpotless() {
         mapOf(
           "ktlint_standard_filename" to "disabled",
           "ktlint_function_naming_ignore_when_annotated_with" to "Composable",
-        )
+        ),
       )
       licenseHeaderFile(rootProject.file("spotless/copyright.txt"))
     }
@@ -31,5 +33,4 @@ fun Project.configureSpotless() {
   }
 }
 
-private fun Project.spotless(action: SpotlessExtension.() -> Unit) =
-  extensions.configure<SpotlessExtension>(action)
+private fun Project.spotless(action: SpotlessExtension.() -> Unit) = extensions.configure<SpotlessExtension>(action)

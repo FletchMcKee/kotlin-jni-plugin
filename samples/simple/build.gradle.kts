@@ -1,22 +1,9 @@
 // Copyright 2025, Colin McKee
 // SPDX-License-Identifier: Apache-2.0
-buildscript {
-  dependencies {
-    classpath(libs.ktjni.gradle.plugin)
-  }
-  repositories {
-    mavenLocal()
-    mavenCentral()
-    google()
-  }
-}
-
-apply(plugin = "io.github.fletchmckee.ktjni")
-
 plugins {
   alias(libs.plugins.android.library)
   alias(libs.plugins.kotlin.android)
-  alias(libs.plugins.ktjni.root)
+  id("io.github.fletchmckee.ktjni")
 }
 
 android {

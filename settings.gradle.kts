@@ -1,12 +1,16 @@
 // Copyright 2025, Colin McKee
 // SPDX-License-Identifier: Apache-2.0
 pluginManagement {
-  includeBuild("build-logic")
+  includeBuild("build-support/settings")
   repositories {
     google()
     mavenCentral()
     gradlePluginPortal()
   }
+}
+
+plugins {
+  id("io.github.fletchmckee.ktjni.settings")
 }
 
 @Suppress("UnstableApiUsage")
@@ -27,3 +31,10 @@ include(
   ":samples:demo",
   ":samples:simple",
 )
+
+includeBuild("build-support") {
+  dependencySubstitution {
+    substitute(module("io.github.fletchmckee.ktjni.build:gradle-plugin")).using(project(":"))
+    substitute(module("io.github.fletchmckee.ktjni:plugin")).using(project(":plugin"))
+  }
+}
