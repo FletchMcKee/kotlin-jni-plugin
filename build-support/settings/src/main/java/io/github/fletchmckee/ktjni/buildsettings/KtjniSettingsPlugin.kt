@@ -15,7 +15,6 @@ class KtjniSettingsPlugin : Plugin<Settings> {
     }
 
     target.gradle.allprojects {
-      logger.quiet("✅ settings $target path: ${project.path}")
       if (project.path == ":") {
         // Root project needs to wait until after evaluation to apply plugin
         project.afterEvaluate {

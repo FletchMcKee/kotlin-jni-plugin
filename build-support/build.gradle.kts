@@ -12,20 +12,6 @@ plugins {
   alias(libs.plugins.spotless)
 }
 
-spotless {
-  kotlin {
-    target("src/**/*.kt")
-    ktlint()
-    licenseHeaderFile(rootProject.file("../spotless/copyright.txt"))
-  }
-
-  kotlinGradle {
-    target("*.kts")
-    ktlint()
-    licenseHeaderFile(rootProject.file("../spotless/copyright.txt"), "(^(?![\\/ ]\\**).*$)")
-  }
-}
-
 dependencies {
   compileOnly(libs.spotless.gradle.plugin)
 }

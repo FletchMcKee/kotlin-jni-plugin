@@ -7,15 +7,17 @@ import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
 
 fun Project.configureSpotless() {
-  with(pluginManager) {
-    apply("com.diffplug.spotless")
-  }
+  with(pluginManager) { apply("com.diffplug.spotless") }
 
   spotless {
     val ktlintVersion = libs.findVersion("ktlint").get().requiredVersion
 
     kotlin {
-      target("**/*.kt")
+      if (path == ":") {
+        target("build-support/src/**/*.kt")
+      } else {
+        target("src/**/*.kt")
+      }
       ktlint(ktlintVersion).editorConfigOverride(
         mapOf(
           "ktlint_standard_filename" to "disabled",
