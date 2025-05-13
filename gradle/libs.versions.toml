@@ -11,7 +11,7 @@ junitExt = "1.2.1"
 junitJupiter = "5.12.2"
 kotlin = "2.1.21"
 ktlint = "1.5.0"
-lifecycleRuntimeKtx = "2.8.7"
+lifecycleRuntimeKtx = "2.9.0"
 spotless = "7.0.3"
 
 [libraries]
