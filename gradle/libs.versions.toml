@@ -1,11 +1,11 @@
 [versions]
 kotlin = "2.1.21"
-kotlinGradlePlugin = "2.0.21"
+kotlinGradlePlugin = "2.1.21"
 ktlint = "1.5.0"
 spotless = "7.0.3"
 asm = "9.8"
 agp = "8.9.2"
-kotlinVersion = "2.0.21"
+kotlinVersion = "2.1.21"
 junit = "4.13.2"
 runner = "1.0.2"
 espressoCore = "3.0.2"
