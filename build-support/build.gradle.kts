@@ -27,7 +27,7 @@ spotless {
 }
 
 dependencies {
-  compileOnly(libs.spotless.gradlePlugin)
+  compileOnly(libs.spotless.gradle.plugin)
 }
 
 gradlePlugin {

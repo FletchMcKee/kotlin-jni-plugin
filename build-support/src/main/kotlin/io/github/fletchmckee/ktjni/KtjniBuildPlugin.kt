@@ -7,6 +7,7 @@ import org.gradle.api.Project
 
 @Suppress("unused") // Invoked reflectively
 class KtjniBuildPlugin : Plugin<Project> {
-  override fun apply(target: Project) =
-    with(target) { configureSpotless() }
+  override fun apply(target: Project) = with(target) {
+    configureSpotless()
+  }
 }

@@ -15,7 +15,7 @@ fun Project.configureSpotless() {
     val ktlintVersion = libs.findVersion("ktlint").get().requiredVersion
 
     kotlin {
-      target("src/**/*.kt")
+      target("**/*.kt")
       ktlint(ktlintVersion).editorConfigOverride(
         mapOf(
           "ktlint_standard_filename" to "disabled",

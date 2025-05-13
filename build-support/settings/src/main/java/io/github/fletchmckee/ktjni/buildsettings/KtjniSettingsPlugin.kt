@@ -1,8 +1,11 @@
+// Copyright 2025, Colin McKee
+// SPDX-License-Identifier: Apache-2.0
 package io.github.fletchmckee.ktjni.buildsettings
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.initialization.Settings
+import org.gradle.internal.cc.base.logger
 
 @Suppress("unused") // Invoked reflectively
 class KtjniSettingsPlugin : Plugin<Settings> {
@@ -12,6 +15,7 @@ class KtjniSettingsPlugin : Plugin<Settings> {
     }
 
     target.gradle.allprojects {
+      logger.quiet("✅ settings $target path: ${project.path}")
       if (project.path == ":") {
         // Root project needs to wait until after evaluation to apply plugin
         project.afterEvaluate {

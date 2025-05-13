@@ -8,7 +8,7 @@ plugins {
   `kotlin-dsl`
   `java-gradle-plugin`
   `maven-publish`
-  alias(libs.plugins.kotlinApiDump)
+  alias(libs.plugins.binary.compatibility.validator)
 }
 
 kotlin {

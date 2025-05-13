@@ -13,7 +13,6 @@ android {
   defaultConfig {
     minSdk = 26
 
-    testInstrumentationRunner = "android.support.test.runner.AndroidJUnitRunner"
     @Suppress("UnstableApiUsage")
     externalNativeBuild {
       cmake {
@@ -47,6 +46,4 @@ android {
 
 dependencies {
   testImplementation(libs.junit)
-  androidTestImplementation(libs.runner)
-  androidTestImplementation(libs.espresso.core)
 }
