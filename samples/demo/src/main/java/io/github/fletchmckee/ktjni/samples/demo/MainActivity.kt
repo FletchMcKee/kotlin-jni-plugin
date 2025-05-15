@@ -24,7 +24,7 @@ class MainActivity : ComponentActivity() {
       KtjniTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
           Greeting(
-            greeting = NativeLib().stringFromJNI(),
+            greeting = NativeLib().stringFromJni(),
             modifier = Modifier.padding(innerPadding),
           )
         }
