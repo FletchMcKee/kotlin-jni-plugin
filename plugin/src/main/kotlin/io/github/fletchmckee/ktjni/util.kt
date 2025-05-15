@@ -123,7 +123,7 @@ internal val FieldNode.jniConstant: String?
 
     return when (desc) {
       "Z" -> {
-        // For boolean fields, ASM provides the value as Integer (0 or 1)
+        // For boolean fields, ASM provides the value as Int (0 or 1)
         when (value) {
           is Int -> if (value.toInt() != 0) "1L" else "0L"
           else -> null
@@ -134,7 +134,7 @@ internal val FieldNode.jniConstant: String?
       "I", // Int
       -> "$value" + "L"
       "J" -> "$value" + if (isWindows) "i64" else "LL" // Long
-      "C" -> "${(value as? Integer)?.toInt()?.and(0xffff)}L" // Char (as integer code point)
+      "C" -> "${(value as? Int)?.toInt()?.and(0xffff)}L" // Char (as integer code point)
       "F" -> { // Float
         val fv = value as Float
         if (fv.isInfinite()) {
