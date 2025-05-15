@@ -4,66 +4,103 @@ package io.github.fletchmckee.ktjni
 
 import java.io.File
 import java.io.FileInputStream
-import javax.inject.Inject
-import org.gradle.api.DefaultTask
+import java.io.PrintWriter
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.logging.LogLevel.INFO
-import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.IgnoreEmptyDirectories
-import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.SkipWhenEmpty
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.logging.Logging
+import org.gradle.workers.WorkAction
+import org.gradle.workers.WorkParameters
 import org.objectweb.asm.ClassReader
-import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.ClassNode
+import org.objectweb.asm.tree.MethodNode
 
-@CacheableTask
-internal abstract class GenerateJniHeaders
-@Inject
-constructor() : DefaultTask() {
-  @get:InputDirectory
-  @get:SkipWhenEmpty
-  @get:IgnoreEmptyDirectories
-  @get:PathSensitive(PathSensitivity.RELATIVE)
-  abstract val sourceDir: DirectoryProperty
+internal interface GenerateJniHeadersParams : WorkParameters {
+  val sourceDir: DirectoryProperty
+  val outputDir: DirectoryProperty
+}
 
-  @get:OutputDirectory
-  abstract val outputDir: DirectoryProperty
+/**
+ * See [JNI naming convention](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/design.html#resolving_native_method_names)
+ * for reference.
+ */
+internal abstract class GenerateJniHeaders : WorkAction<GenerateJniHeadersParams> {
+  private val logger = Logging.getLogger(GenerateJniHeaders::class.java)
 
-  @TaskAction
-  fun generateJniHeaders() {
-    val srcDir = sourceDir.asFile.get()
-    logger.log(
-      INFO,
-      """
-        =====================================================
-        generateJniHeaders invoked
-          - sourceDir: ${srcDir.absolutePath}
-          - outputDir: ${outputDir.asFile.get().absolutePath}
-            - output in build directory: ${outputDir.inBuildDirectory(project)}
-        =====================================================
-      """.trimIndent(),
-    )
-    sourceDir.get().asFile
-      .walkTopDown()
+  override fun execute() {
+    val srcDir = parameters.sourceDir.asFile.get()
+    val outputDir = parameters.outputDir.asFile.get()
+    val start = System.currentTimeMillis()
+    logger.lifecycle("Ktjni - generating JNI headers for $srcDir")
+    srcDir.walkTopDown()
       .filter { it.extension == "class" }
-      .forEach { classFile ->
-        FileInputStream(classFile).use { inputStream ->
-          val reader = ClassReader(inputStream)
-          val classNode = ClassNode()
-          reader.accept(classNode, 0)
-
-          val className = classNode.name.replace(File.separator, ".")
-
-          for (method in classNode.methods) {
-            if ((method.access and Opcodes.ACC_NATIVE) != 0) {
-              logger.log(INFO, "Native method: $className#${method.name}${method.desc}")
-            }
-          }
-        }
+      .mapNotNull { classFile -> processClassFile(classFile = classFile, srcDir = srcDir, outputDir = outputDir) }
+      .count()
+      .also { count ->
+        val delta = System.currentTimeMillis() - start
+        logger.info("Ktjni - completed writing $count header file(s) in $delta ms")
       }
+  }
+
+  private fun processClassFile(classFile: File, srcDir: File, outputDir: File): String? {
+    // Parse to an ASM ClassNode
+    val classNode = FileInputStream(classFile).use { inputStream ->
+      val reader = ClassReader(inputStream)
+      val node = ClassNode()
+      reader.accept(node, 0)
+      node
+    }
+    logger.info("Processing class: ${classNode.name}")
+    // Skip local classes
+    if (classNode.isLocal) return null
+
+    // Find native methods and count overloaded methods
+    val overloadedMethodMap = mutableMapOf<String, Int>()
+    val nativeMethods = classNode.methods
+      .filter { it.needsHeader }
+      .onEach { overloadedMethodMap.merge(it.name, 1, Int::plus) }
+
+    // Skip classes without native methods
+    if (nativeMethods.isEmpty()) return null
+
+    return writeJniHeader(
+      classNode = classNode,
+      srcDir = srcDir,
+      outputDir = outputDir,
+      nativeMethods = nativeMethods,
+      overloadedMethodMap = overloadedMethodMap,
+    )
+  }
+
+  private fun writeJniHeader(
+    classNode: ClassNode,
+    srcDir: File,
+    outputDir: File,
+    nativeMethods: List<MethodNode>,
+    overloadedMethodMap: Map<String, Int>,
+  ): String? {
+    val className = classNode.name.replace('/', '.')
+    val fileName = className.replace(Regex("[.$]"), "_") + ".h"
+    logger.info("Class {$className} contains native methods. Creating file $fileName")
+    val file = File(outputDir, fileName)
+    PrintWriter(file).use { out ->
+      val cName = className.toMangledJniName()
+      out.doNotEditHeader()
+      out.guardBegin(cName)
+      out.cppGuardBegin()
+      out.writeStatics(
+        classNode = classNode,
+        cName = cName,
+        srcDir = srcDir,
+      )
+      out.writeNativeMethods(
+        cName = cName,
+        classFlatName = className,
+        nativeMethods = nativeMethods,
+        overloadedMethodMap = overloadedMethodMap,
+      )
+      out.cppGuardEnd()
+      out.guardEnd()
+    }
+
+    return className
   }
 }

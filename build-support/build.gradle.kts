@@ -9,7 +9,6 @@ allprojects {
 
 plugins {
   `kotlin-dsl`
-  alias(libs.plugins.spotless)
 }
 
 dependencies {

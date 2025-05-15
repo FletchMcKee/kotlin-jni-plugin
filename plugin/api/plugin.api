@@ -1,3 +1,10 @@
+public abstract interface annotation class io/github/fletchmckee/ktjni/KtjniDsl : java/lang/annotation/Annotation {
+}
+
+public abstract interface class io/github/fletchmckee/ktjni/KtjniExtension {
+	public abstract fun getOutputDir ()Lorg/gradle/api/file/DirectoryProperty;
+}
+
 public final class io/github/fletchmckee/ktjni/KtjniPlugin : org/gradle/api/Plugin {
 	public fun <init> ()V
 	public synthetic fun apply (Ljava/lang/Object;)V

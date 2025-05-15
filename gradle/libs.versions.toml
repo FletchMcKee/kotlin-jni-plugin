@@ -5,8 +5,10 @@ asm = "9.8"
 composeBom = "2025.05.00"
 coreKtx = "1.16.0"
 espressoCore = "3.6.1"
+googleTruth = "1.4.4"
 junit = "4.13.2"
 junitExt = "1.2.1"
+junitJupiter = "5.10.0"
 kotlin = "2.1.21"
 ktlint = "1.5.0"
 lifecycleRuntimeKtx = "2.8.7"
@@ -17,6 +19,10 @@ asm = { module = "org.ow2.asm:asm", version.ref = "asm" }
 asm-util = { module = "org.ow2.asm:asm-util", version.ref = "asm" }
 
 junit = { group = "junit", name = "junit", version.ref = "junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junitJupiter" }
+kotlin-test-junit5 = { module = "org.jetbrains.kotlin:kotlin-test-junit5" }
+google-truth = { module = "com.google.truth:truth", version.ref = "googleTruth" }
+
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitExt" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }

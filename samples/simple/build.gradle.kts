@@ -47,3 +47,7 @@ android {
 dependencies {
   testImplementation(libs.junit)
 }
+
+ktjni {
+  outputDir.set(project.layout.projectDirectory.dir("src/main/cpp"))
+}

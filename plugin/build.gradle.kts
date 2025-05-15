@@ -26,12 +26,22 @@ tasks.withType<KotlinCompile>().configureEach {
   }
 }
 
+tasks.withType<Test>().configureEach {
+  useJUnitPlatform()
+}
+
 dependencies {
   implementation(gradleApi())
   implementation(localGroovy())
   implementation(libs.asm)
   implementation(libs.asm.util)
   implementation(libs.kotlin.gradle.plugin)
+
+  // Test libraries
+  testImplementation(libs.junit.jupiter)
+  testImplementation(libs.kotlin.test.junit5)
+  testImplementation(libs.google.truth)
+  testImplementation(gradleTestKit())
 }
 
 gradlePlugin {
