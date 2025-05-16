@@ -3,6 +3,7 @@
 package io.github.fletchmckee.ktjni
 
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.ListProperty
 
 @DslMarker
 public annotation class KtjniDsl
@@ -10,4 +11,5 @@ public annotation class KtjniDsl
 @KtjniDsl
 public interface KtjniExtension {
   public val outputDir: DirectoryProperty
+  public val ignoreBuildTypes: ListProperty<String>
 }

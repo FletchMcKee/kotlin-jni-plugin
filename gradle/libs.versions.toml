@@ -1,6 +1,6 @@
 [versions]
 activityCompose = "1.10.1"
-agp = "8.10.0"
+agp = "8.9.2"
 asm = "9.8"
 composeBom = "2025.05.00"
 coreKtx = "1.16.0"
@@ -20,6 +20,8 @@ asm-util = { module = "org.ow2.asm:asm-util", version.ref = "asm" }
 
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junitJupiter" }
+junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junitJupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 kotlin-test-junit5 = { module = "org.jetbrains.kotlin:kotlin-test-junit5" }
 google-truth = { module = "com.google.truth:truth", version.ref = "googleTruth" }
 

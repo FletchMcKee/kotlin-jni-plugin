@@ -89,34 +89,6 @@ internal val Type.jniType: String get() = when (this.sort) {
   else -> throw IllegalArgumentException("Unknown type: $this")
 }
 
-/**
- * Converts a Type to its JNI parameter encoding for use in overloaded method names.
- */
-internal val Type.jniParameter: String get() = when (this.sort) {
-  Type.BOOLEAN -> "Z"
-  Type.CHAR -> "C"
-  Type.BYTE -> "B"
-  Type.SHORT -> "S"
-  Type.INT -> "I"
-  Type.FLOAT -> "F"
-  Type.LONG -> "J"
-  Type.DOUBLE -> "D"
-  Type.ARRAY -> {
-    // For arrays, each dimension is represented by _3
-    val dimensions = dimensions
-    val prefix = "_3".repeat(dimensions)
-
-    // Get the element type encoding
-    val elementType = elementType
-    prefix + elementType.jniParameter
-  }
-  Type.OBJECT -> {
-    // For object types, encode the class name
-    internalName.replace('/', '_')
-  }
-  else -> throw IllegalArgumentException("Unknown type: $this")
-}
-
 internal val FieldNode.jniConstant: String?
   get() {
     val value = this.value ?: return null

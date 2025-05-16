@@ -26,7 +26,7 @@ tasks.withType<KotlinCompile>().configureEach {
   }
 }
 
-tasks.withType<Test>().configureEach {
+tasks.named<Test>("test") {
   useJUnitPlatform()
 }
 
@@ -39,9 +39,11 @@ dependencies {
 
   // Test libraries
   testImplementation(libs.junit.jupiter)
+  testImplementation(libs.junit.jupiter.params)
   testImplementation(libs.kotlin.test.junit5)
   testImplementation(libs.google.truth)
   testImplementation(gradleTestKit())
+  testRuntimeOnly(libs.junit.platform.launcher)
 }
 
 gradlePlugin {

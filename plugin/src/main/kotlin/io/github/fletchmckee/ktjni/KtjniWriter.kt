@@ -226,7 +226,7 @@ internal fun MethodNode.toMangledJniMethod(classFlatName: String, isOverloaded: 
     val paramTypes = methodType.argumentTypes
     // Even if there are no arguments, we always append double underscore for overloaded methods.
     append("__")
-    paramTypes.forEach { append(it.jniParameter) }
+    paramTypes.forEach { append(it.descriptor.toJniIdentifier()) }
   }
 }
 

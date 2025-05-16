@@ -17,8 +17,15 @@ public class KtjniPlugin : Plugin<Project> {
     }
 
     project.afterEvaluate {
+      val ignoreBuildTypes = extension.ignoreBuildTypes.convention(emptyList<String>()).get()
       project.tasks
         .withType(AbstractKotlinCompile::class.java)
+        .filter { task ->
+          // Keep task if it doesn't match any ignored build type
+          ignoreBuildTypes.none { buildType ->
+            task.name.contains(buildType, ignoreCase = true)
+          }
+        }
         .forEach { compileTask ->
           val compileTaskProvider = project.tasks.named(compileTask.name, AbstractKotlinCompile::class.java)
           val classDir = compileTask.destinationDirectory

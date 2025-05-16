@@ -42,21 +42,58 @@ class KtjniWriterTest {
     assertThat('λ'.toJniSymbol()).isEqualTo("_003bb")
   }
 
-  @Test fun `toMangledJniMethod - handles method overloading`() {
-    val fakeMethodNode = fakeMethodNode("getValue", "(I)V")
+  @Test fun `toMangledJniMethod - non-overloaded method with no arguments`() {
+    val methodNode = fakeMethodNode("nativeMethod", "()V")
+    assertThat(methodNode.toMangledJniMethod("com.example.TestClass", false))
+      .isEqualTo("Java_com_example_TestClass_nativeMethod")
+  }
 
-    // Verify non-overloaded method
-    assertThat(fakeMethodNode.toMangledJniMethod("com.example.TestClass", false))
-      .isEqualTo("Java_com_example_TestClass_getValue")
+  @Test fun `toMangledJniMethod - overloaded method with no arguments`() {
+    val methodNode = fakeMethodNode("nativeMethod", "()V")
+    assertThat(methodNode.toMangledJniMethod("com.example.TestClass", true))
+      .isEqualTo("Java_com_example_TestClass_nativeMethod__")
+  }
 
-    // Verify overloaded method
-    assertThat(fakeMethodNode.toMangledJniMethod("com.example.TestClass", true))
-      .isEqualTo("Java_com_example_TestClass_getValue__I")
+  @Test fun `toMangledJniMethod - overloaded method with primitive arguments`() {
+    val methodNode = fakeMethodNode("nativeMethod", "(I)V")
+    assertThat(methodNode.toMangledJniMethod("com.example.TestClass", true))
+      .isEqualTo("Java_com_example_TestClass_nativeMethod__I")
+  }
 
-    // Verify special characters
-    val specialMethodNode = fakeMethodNode("process_data", "(Ljava/lang/String;)Z")
-    assertThat(specialMethodNode.toMangledJniMethod("com.example.TestClass", true))
-      .isEqualTo("Java_com_example_TestClass_process_1data__java_lang_String")
+  @Test fun `toMangledJniMethod - overloaded method with object argument`() {
+    val methodNode = fakeMethodNode("nativeMethod", "(Ljava/lang/String;)V")
+    assertThat(methodNode.toMangledJniMethod("com.example.TestClass", true))
+      .isEqualTo("Java_com_example_TestClass_nativeMethod__Ljava_lang_String_2")
+  }
+
+  @Test fun `test overloaded method with array arguments`() {
+    val methodNode = fakeMethodNode("nativeMethod", "([I[F)V")
+    assertThat(methodNode.toMangledJniMethod("com.example.TestClass", true))
+      .isEqualTo("Java_com_example_TestClass_nativeMethod___3I_3F")
+  }
+
+  @Test fun `test overloaded method with multidimensional arrays`() {
+    val methodNode = fakeMethodNode("nativeMethod", "([[I[[[F)V")
+    assertThat(methodNode.toMangledJniMethod("com.example.TestClass", true))
+      .isEqualTo("Java_com_example_TestClass_nativeMethod___3_3I_3_3_3F")
+  }
+
+  @Test fun `test overloaded method with object arrays`() {
+    val methodNode = fakeMethodNode("nativeMethod", "([Ljava/lang/String;)V")
+    assertThat(methodNode.toMangledJniMethod("com.example.TestClass", true))
+      .isEqualTo("Java_com_example_TestClass_nativeMethod___3Ljava_lang_String_2")
+  }
+
+  @Test fun `toMangledJniMethod - overloaded method with special characters`() {
+    val methodNode = fakeMethodNode("process_data", "(Ljava/lang/String;)Z")
+    assertThat(methodNode.toMangledJniMethod("com.example.TestClass", true))
+      .isEqualTo("Java_com_example_TestClass_process_1data__Ljava_lang_String_2")
+  }
+
+  @Test fun `toMangledJniName - complex mixed argument types`() {
+    val methodNode = fakeMethodNode("nativeMethod", "(I[FJLjava/lang/String;[[Z)V")
+    assertThat(methodNode.toMangledJniMethod("com.example.TestClass", true))
+      .isEqualTo("Java_com_example_TestClass_nativeMethod__I_3FJLjava_lang_String_2_3_3Z")
   }
 
   private fun fakeMethodNode(name: String, descriptor: String): MethodNode = MethodNode().apply {

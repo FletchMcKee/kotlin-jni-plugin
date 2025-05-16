@@ -12,13 +12,6 @@ android {
 
   defaultConfig {
     minSdk = 26
-
-    @Suppress("UnstableApiUsage")
-    externalNativeBuild {
-      cmake {
-        cppFlags("")
-      }
-    }
   }
 
   buildTypes {
@@ -50,4 +43,5 @@ dependencies {
 
 ktjni {
   outputDir.set(project.layout.projectDirectory.dir("src/main/cpp"))
+  ignoreBuildTypes.set(listOf("release"))
 }
