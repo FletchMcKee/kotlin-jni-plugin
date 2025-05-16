@@ -4,6 +4,10 @@ package io.github.fletchmckee.ktjni
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.Task
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.tasks.TaskProvider
+import org.gradle.api.tasks.compile.AbstractCompile
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompile
 
 @Suppress("unused") // Invoked reflectively
@@ -18,6 +22,7 @@ public class KtjniPlugin : Plugin<Project> {
 
     project.afterEvaluate {
       val ignoreBuildTypes = extension.ignoreBuildTypes.convention(emptyList<String>()).get()
+      // KotlinCompile types extend from AbstractKotlinCompile and not AbstractCompile.
       project.tasks
         .withType(AbstractKotlinCompile::class.java)
         .filter { task ->
@@ -27,24 +32,57 @@ public class KtjniPlugin : Plugin<Project> {
           }
         }
         .forEach { compileTask ->
-          val compileTaskProvider = project.tasks.named(compileTask.name, AbstractKotlinCompile::class.java)
-          val classDir = compileTask.destinationDirectory
-          val taskName = "generateJniHeaders${compileTask.name.replaceFirstChar(Char::uppercase)}"
-          val generateJniHeadersTask = project.tasks.register(
-            taskName,
-            KtjniTask::class.java,
-          ) {
-            sourceDir.set(classDir)
-            outputDir.set(extension.outputDir.convention(project.layout.buildDirectory.dir("generated/ktjni")))
-            group = GROUP
-            description = "Generates JNI headers from class files after ${compileTask.name}"
+          registerHeaderTask(
+            name = compileTask.name,
+            compileTask = AbstractKotlinCompile::class.java,
+            classDir = compileTask.destinationDirectory,
+            extension = extension,
+            aggregate = aggregate,
+          )
+        }
+
+      project.tasks
+        .withType(AbstractCompile::class.java)
+        .filter { task ->
+          // Keep task if it doesn't match any ignored build type
+          ignoreBuildTypes.none { buildType ->
+            task.name.contains(buildType, ignoreCase = true)
           }
-
-          generateJniHeadersTask.configure { dependsOn(compileTaskProvider) }
-
-          aggregate.configure { dependsOn(generateJniHeadersTask) }
+        }
+        .forEach { compileTask ->
+          registerHeaderTask(
+            name = compileTask.name,
+            compileTask = AbstractCompile::class.java,
+            classDir = compileTask.destinationDirectory,
+            extension = extension,
+            aggregate = aggregate,
+          )
         }
     }
+  }
+
+  private fun <T : Task> Project.registerHeaderTask(
+    name: String,
+    compileTask: Class<T>,
+    classDir: DirectoryProperty,
+    extension: KtjniExtension,
+    aggregate: TaskProvider<Task>,
+  ) {
+    val compileTaskProvider = tasks.named(name, compileTask)
+    val taskName = "generateJniHeaders${name.replaceFirstChar(Char::uppercase)}"
+    val generateJniHeadersTask = tasks.register(
+      taskName,
+      KtjniTask::class.java,
+    ) {
+      sourceDir.set(classDir)
+      outputDir.set(extension.outputDir.convention(layout.buildDirectory.dir("generated/ktjni")))
+      group = GROUP
+      description = "Generates JNI headers from class files after $name"
+    }
+
+    generateJniHeadersTask.configure { dependsOn(compileTaskProvider) }
+
+    aggregate.configure { dependsOn(generateJniHeadersTask) }
   }
 
   internal companion object {

@@ -18,15 +18,13 @@ class KtjniPluginTest {
   private lateinit var buildFile: File
   private lateinit var settingsFile: File
   private lateinit var srcDir: File
-  private lateinit var kotlinFile: File
+  private lateinit var testFile: File
 
   @BeforeEach
   fun setup() {
     val projectDir = testProjectDir.toFile()
     buildFile = File(projectDir, "build.gradle.kts")
     settingsFile = File(projectDir, "settings.gradle.kts")
-    srcDir = File(projectDir, "src/main/kotlin/com/example").apply { mkdirs() }
-    kotlinFile = File(srcDir, "Example.kt")
 
     settingsFile.writeText(
       """
@@ -36,15 +34,16 @@ class KtjniPluginTest {
   }
 
   @Test
-  fun `plugin applies and generates headers for Example class`() {
-    // TODO: Create files to read or at least put this text in its own file.
-    //  May also want to create a separate test module to place all of this logic in.
-    kotlinFile.writeText(
+  fun `plugin applies and generates headers for Kotlin`() {
+    val parent = testProjectDir.toFile()
+    srcDir = File(parent, "src/main/kotlin/com/example").apply { mkdirs() }
+    testFile = File(srcDir, "Example.kt")
+    testFile.writeText(
       """
       package com.example
 
       class Example {
-          external fun exampleNative(): Int
+        external fun exampleNative(): Int
       }
       """.trimIndent(),
     )
@@ -52,12 +51,61 @@ class KtjniPluginTest {
     buildFile.writeText(
       """
       plugins {
-          kotlin("jvm") version "1.8.0"
-          id("io.github.fletchmckee.ktjni")
+        kotlin("jvm") version "1.8.0"
+        id("io.github.fletchmckee.ktjni")
       }
 
       repositories {
-          mavenCentral()
+        mavenCentral()
+      }
+      """.trimIndent(),
+    )
+
+    val result = GradleRunner.create()
+      .withProjectDir(parent)
+      .withPluginClasspath()
+      .withArguments("generateJniHeaders", "--info")
+      .build()
+
+    assertThat(result.task(":generateJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+
+    assertThat(result.task(":generateJniHeadersCompileKotlin")?.outcome)
+      .isIn(listOf(TaskOutcome.SUCCESS, TaskOutcome.UP_TO_DATE))
+
+    assertThat(result.task(":generateJniHeadersCompileJava")?.outcome)
+      .isIn(listOf(TaskOutcome.NO_SOURCE, TaskOutcome.UP_TO_DATE))
+    // Verify that no Scala/Groovy tasks were executed
+    assertThat(result.tasks.map { it.path }).apply {
+      doesNotContain(":generateJniHeadersCompileScala")
+      doesNotContain(":generateJniHeadersCompileGroovy")
+    }
+
+    assertHeaders()
+  }
+
+  @Test
+  fun `plugin applies and generates headers for Java`() {
+    srcDir = File(testProjectDir.toFile(), "src/main/java/com/example").apply { mkdirs() }
+    testFile = File(srcDir, "Example.java")
+    testFile.writeText(
+      """
+      package com.example;
+
+      public class Example {
+        public native int exampleNative();
+      }
+      """.trimIndent(),
+    )
+
+    buildFile.writeText(
+      """
+      plugins {
+        java
+        id("io.github.fletchmckee.ktjni")
+      }
+
+      repositories {
+        mavenCentral()
       }
       """.trimIndent(),
     )
@@ -70,6 +118,75 @@ class KtjniPluginTest {
 
     assertThat(result.task(":generateJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
 
+    assertThat(result.task(":generateJniHeadersCompileJava")?.outcome)
+      .isIn(listOf(TaskOutcome.SUCCESS, TaskOutcome.UP_TO_DATE))
+
+    // Verify that no Kotlin/Scala/Groovy tasks were executed
+    assertThat(result.tasks.map { it.path }).apply {
+      doesNotContain(":generateJniHeadersCompileKotlin")
+      doesNotContain(":generateJniHeadersCompileScala")
+      doesNotContain(":generateJniHeadersCompileGroovy")
+    }
+
+    assertHeaders()
+  }
+
+  @Test
+  fun `plugin applies and generates headers for Scala`() {
+    srcDir = File(testProjectDir.toFile(), "src/main/scala/com/example").apply { mkdirs() }
+    testFile = File(srcDir, "Example.scala")
+    testFile.writeText(
+      """
+      package com.example
+
+      class Example {
+        @native
+        def exampleNative(): Int
+      }
+      """.trimIndent(),
+    )
+
+    buildFile.writeText(
+      """
+      plugins {
+        scala
+        id("io.github.fletchmckee.ktjni")
+      }
+
+      repositories {
+        mavenCentral()
+      }
+
+      dependencies {
+        implementation("org.scala-lang:scala-library:2.12.18")
+      }
+      """.trimIndent(),
+    )
+
+    val result = GradleRunner.create()
+      .withProjectDir(testProjectDir.toFile())
+      .withPluginClasspath()
+      .withArguments("generateJniHeaders", "--info")
+      .build()
+
+    assertThat(result.task(":generateJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+
+    assertThat(result.task(":generateJniHeadersCompileScala")?.outcome)
+      .isIn(listOf(TaskOutcome.SUCCESS, TaskOutcome.UP_TO_DATE))
+
+    assertThat(result.task(":generateJniHeadersCompileJava")?.outcome)
+      .isIn(listOf(TaskOutcome.NO_SOURCE, TaskOutcome.UP_TO_DATE))
+
+    // Verify that no Kotlin/Groovy tasks were executed
+    assertThat(result.tasks.map { it.path }).apply {
+      doesNotContain(":generateJniHeadersCompileKotlin")
+      doesNotContain(":generateJniHeadersCompileGroovy")
+    }
+
+    assertHeaders()
+  }
+
+  private fun assertHeaders() {
     val headerDir = File(testProjectDir.toFile(), "build/generated/ktjni")
     assertThat(headerDir.exists()).isTrue()
 
@@ -77,8 +194,11 @@ class KtjniPluginTest {
     assertThat(headerFile.exists()).isTrue()
 
     val headerContent = headerFile.readText()
-    assertThat(headerContent).isEqualTo(
-      """
+    assertThat(headerContent).isEqualTo(expectedOutcome)
+  }
+
+  private companion object {
+    val expectedOutcome = """
       /* DO NOT EDIT THIS FILE - it is machine generated */
       #include <jni.h>
       /* Header for class com_example_Example */
@@ -102,7 +222,6 @@ class KtjniPluginTest {
       #endif
       #endif
 
-      """.trimIndent(),
-    )
+    """.trimIndent()
   }
 }

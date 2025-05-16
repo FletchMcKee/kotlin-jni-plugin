@@ -52,7 +52,7 @@ internal abstract class GenerateJniHeaders : WorkAction<GenerateJniHeadersParams
     // Skip local classes
     if (classNode.isLocal) return null
 
-    // Find native methods and count overloaded methods
+    // Find native methods and track method overloading
     val overloadedMethodMap = mutableMapOf<String, Int>()
     val nativeMethods = classNode.methods
       .filter { it.needsHeader }
