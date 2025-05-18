@@ -12,6 +12,7 @@ junitJupiter = "5.12.2"
 kotlin = "2.1.21"
 ktlint = "1.5.0"
 lifecycleRuntimeKtx = "2.9.0"
+mavenPublish = "0.32.0"
 spotless = "7.0.3"
 
 [libraries]
@@ -52,3 +53,4 @@ android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }

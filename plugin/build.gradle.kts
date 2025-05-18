@@ -1,5 +1,7 @@
 // Copyright 2025, Colin McKee
 // SPDX-License-Identifier: Apache-2.0
+import com.vanniktech.maven.publish.GradlePlugin
+import com.vanniktech.maven.publish.JavadocJar
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -7,8 +9,8 @@ plugins {
   kotlin("jvm")
   `kotlin-dsl`
   `java-gradle-plugin`
-  `maven-publish`
   alias(libs.plugins.binary.compatibility.validator)
+  alias(libs.plugins.maven.publish)
 }
 
 kotlin {
@@ -53,4 +55,24 @@ gradlePlugin {
       implementationClass = "io.github.fletchmckee.ktjni.KtjniPlugin"
     }
   }
+}
+
+/**
+ * This module exists in two contexts:
+ *  1. In the root project where it's built as a publishable artifact
+ *  2. In the build-support includeBuild where it's used for internal development
+ */
+if (rootProject.name == "ktjni") {
+  mavenPublishing {
+    configure(
+      GradlePlugin(
+        javadocJar = JavadocJar.Javadoc(),
+        sourcesJar = true,
+      ),
+    )
+  }
+} else {
+  // Use a separate build directory when included in build-support to prevent build cache conflicts and configuration pollution between
+  // contexts.
+  layout.buildDirectory.set(File(rootProject.rootDir, "build/plugin"))
 }
