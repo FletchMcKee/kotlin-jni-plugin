@@ -12,19 +12,19 @@ import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompile
 
 @Suppress("unused") // Invoked reflectively
 public class KtjniPlugin : Plugin<Project> {
-  override fun apply(project: Project) {
-    val extension = project.extensions.create("ktjni", KtjniExtension::class.java)
+  override fun apply(target: Project) {
+    val extension = target.extensions.create("ktjni", KtjniExtension::class.java)
 
-    val allHeaderOutputs = project.objects.fileCollection()
+    val allHeaderOutputs = target.objects.fileCollection()
 
-    project.tasks.register("generateJniHeaders") {
+    target.tasks.register("generateJniHeaders") {
       group = GROUP
       description = "Generates JNI headers for all JVM compile tasks"
 
       inputs.files(allHeaderOutputs)
     }
 
-    project.afterEvaluate {
+    target.afterEvaluate {
       val ignoreBuildTypes = extension.ignoreBuildTypes.convention(emptyList<String>()).get()
       // KotlinCompile types extend from AbstractKotlinCompile and not AbstractCompile.
       project.tasks
