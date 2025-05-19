@@ -187,7 +187,7 @@ class KtjniPluginTest {
   }
 
   private fun assertHeaders() {
-    val headerDir = File(testProjectDir.toFile(), "build/generated/ktjni")
+    val headerDir = File(testProjectDir.toFile(), "build/generated/sources/headers")
     assertThat(headerDir.exists()).isTrue()
 
     val headerFile = File(headerDir, "com_example_Example.h")
