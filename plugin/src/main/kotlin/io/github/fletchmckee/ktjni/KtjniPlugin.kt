@@ -72,8 +72,8 @@ public class KtjniPlugin : Plugin<Project> {
       sourceDir.set(classDir)
       outputDir.convention(
         extension.outputDir.orElse(
-          project.layout.buildDirectory.dir("generated/sources/headers").map { it.dir(compileTask.languageName) }
-        )
+          project.layout.buildDirectory.dir("generated/sources/headers").map { it.dir(compileTask.languageName) },
+        ),
       )
       group = GROUP
       description = "Generates JNI headers from class files for ${compileTask.name}"
