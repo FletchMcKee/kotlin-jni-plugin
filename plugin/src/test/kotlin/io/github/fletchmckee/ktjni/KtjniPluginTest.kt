@@ -5,6 +5,7 @@ package io.github.fletchmckee.ktjni
 import com.google.common.truth.Truth.assertThat
 import java.io.File
 import java.nio.file.Path
+import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.jupiter.api.BeforeEach
@@ -51,7 +52,7 @@ class KtjniPluginTest {
     buildFile.writeText(
       """
       plugins {
-        kotlin("jvm") version "1.8.0"
+        kotlin("jvm") version "1.9.23"
         id("io.github.fletchmckee.ktjni")
       }
 
@@ -61,11 +62,7 @@ class KtjniPluginTest {
       """.trimIndent(),
     )
 
-    val result = GradleRunner.create()
-      .withProjectDir(parent)
-      .withPluginClasspath()
-      .withArguments("generateJniHeaders", "--info")
-      .build()
+    val result = createTestRunner(parent)
 
     assertThat(result.task(":generateJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     assertThat(result.task(":generateJniHeadersCompileKotlin")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
@@ -77,12 +74,13 @@ class KtjniPluginTest {
       doesNotContain(":generateJniHeadersCompileGroovy")
     }
 
-    assertHeaders("kotlin")
+    assertHeaders(parent, "kotlin")
   }
 
   @Test
   fun `plugin applies and generates headers for Java`() {
-    srcDir = File(testProjectDir.toFile(), "src/main/java/com/example").apply { mkdirs() }
+    val parent = testProjectDir.toFile()
+    srcDir = File(parent, "src/main/java/com/example").apply { mkdirs() }
     testFile = File(srcDir, "Example.java")
     testFile.writeText(
       """
@@ -107,11 +105,7 @@ class KtjniPluginTest {
       """.trimIndent(),
     )
 
-    val result = GradleRunner.create()
-      .withProjectDir(testProjectDir.toFile())
-      .withPluginClasspath()
-      .withArguments("generateJniHeaders", "--info")
-      .build()
+    val result = createTestRunner(parent)
 
     assertThat(result.task(":generateJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     assertThat(result.task(":generateJniHeadersCompileJava")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
@@ -122,12 +116,13 @@ class KtjniPluginTest {
       doesNotContain(":generateJniHeadersCompileGroovy")
     }
 
-    assertHeaders("java")
+    assertHeaders(parent, "java")
   }
 
   @Test
   fun `plugin applies and generates headers for Scala`() {
-    srcDir = File(testProjectDir.toFile(), "src/main/scala/com/example").apply { mkdirs() }
+    val parent = testProjectDir.toFile()
+    srcDir = File(parent, "src/main/scala/com/example").apply { mkdirs() }
     testFile = File(srcDir, "Example.scala")
     testFile.writeText(
       """
@@ -157,11 +152,7 @@ class KtjniPluginTest {
       """.trimIndent(),
     )
 
-    val result = GradleRunner.create()
-      .withProjectDir(testProjectDir.toFile())
-      .withPluginClasspath()
-      .withArguments("generateJniHeaders", "--info")
-      .build()
+    val result = createTestRunner(parent)
 
     assertThat(result.task(":generateJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     assertThat(result.task(":generateJniHeadersCompileScala")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
@@ -173,11 +164,21 @@ class KtjniPluginTest {
       doesNotContain(":generateJniHeadersCompileGroovy")
     }
 
-    assertHeaders("scala")
+    assertHeaders(parent, "scala")
   }
 
-  private fun assertHeaders(language: String) {
-    val headerDir = File(testProjectDir.toFile(), "build/generated/sources/headers/$language")
+  private fun createTestRunner(
+    projectDir: File,
+    vararg tasks: String = arrayOf("generateJniHeaders", "--info"),
+  ): BuildResult = GradleRunner.create()
+    .withProjectDir(projectDir)
+    .withPluginClasspath()
+    .withArguments(*tasks)
+    .withDebug(true)
+    .build()
+
+  private fun assertHeaders(parent: File, language: String) {
+    val headerDir = File(parent, "build/generated/sources/headers/$language")
     assertThat(headerDir.exists()).isTrue()
 
     val headerFile = File(headerDir, "com_example_Example.h")
