@@ -24,7 +24,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: .github/.java-version
+          java-version: .github/workflows/.java-version
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
