@@ -20,11 +20,11 @@ jobs:
       - name: Copy CI gradle.properties
         run: mkdir -p ~/.gradle ; cp .github/ci-gradle.properties ~/.gradle/gradle.properties
 
-      - name: set up JDK 17
+      - name: set up Java version
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: .github/workflows/.java-version
+          distribution: 'zulu'
+          java-version-file: .github/workflows/.java-version
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
