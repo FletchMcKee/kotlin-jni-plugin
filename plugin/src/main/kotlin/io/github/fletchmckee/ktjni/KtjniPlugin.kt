@@ -8,7 +8,11 @@ import org.gradle.api.Task
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.compile.AbstractCompile
+import org.gradle.api.tasks.compile.GroovyCompile
+import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.api.tasks.scala.ScalaCompile
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompile
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 @Suppress("unused") // Invoked reflectively
 public class KtjniPlugin : Plugin<Project> {
@@ -66,12 +70,28 @@ public class KtjniPlugin : Plugin<Project> {
       KtjniTask::class.java,
     ) {
       sourceDir.set(classDir)
-      outputDir.set(extension.outputDir.convention(layout.buildDirectory.dir("generated/sources/headers")))
+      outputDir.convention(
+        extension.outputDir.orElse(
+          project.layout.buildDirectory.dir("generated/sources/headers").map { it.dir(compileTask.languageName) }
+        )
+      )
       group = GROUP
       description = "Generates JNI headers from class files for ${compileTask.name}"
+
+      doFirst {
+        logger.info("Running $taskName with sourceDir: ${sourceDir.get().asFile.absolutePath}")
+      }
     }
 
     aggregate.from(generateJniHeadersTask.flatMap { it.outputDir })
+  }
+
+  private val Task.languageName: String get() = when (this) {
+    is KotlinCompile -> "kotlin"
+    is JavaCompile -> "java"
+    is ScalaCompile -> "scala"
+    is GroovyCompile -> "groovy"
+    else -> "jvm"
   }
 
   internal companion object {

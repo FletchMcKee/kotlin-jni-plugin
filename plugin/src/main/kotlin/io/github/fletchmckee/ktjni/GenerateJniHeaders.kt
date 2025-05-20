@@ -36,7 +36,7 @@ internal abstract class GenerateJniHeaders : WorkAction<GenerateJniHeadersParams
       .count()
       .also { count ->
         val delta = System.currentTimeMillis() - start
-        logger.info("Ktjni - completed writing $count header file(s) in $delta ms")
+        logger.lifecycle("Ktjni - completed writing $count header file(s) in $delta ms")
       }
   }
 
@@ -83,9 +83,7 @@ internal abstract class GenerateJniHeaders : WorkAction<GenerateJniHeadersParams
     val file = File(outputDir, fileName)
     PrintWriter(file).use { out ->
       val cName = className.toMangledJniName()
-      out.doNotEditHeader()
-      out.guardBegin(cName)
-      out.cppGuardBegin()
+      out.writePrologue(cName)
       out.writeStatics(
         classNode = classNode,
         cName = cName,
@@ -97,8 +95,7 @@ internal abstract class GenerateJniHeaders : WorkAction<GenerateJniHeadersParams
         nativeMethods = nativeMethods,
         overloadedMethodMap = overloadedMethodMap,
       )
-      out.cppGuardEnd()
-      out.guardEnd()
+      out.writeEpilogue()
     }
 
     return className

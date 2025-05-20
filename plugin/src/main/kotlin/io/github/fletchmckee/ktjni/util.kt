@@ -16,8 +16,13 @@ import org.objectweb.asm.tree.MethodNode
 internal val isWindows: Boolean = System.getProperty("os.name").startsWith("Windows")
 
 /**
- * We skip scanning classes if outerMethod is not null.
- * This likely needs more testing/verification as I couldn't find a good alternative to javac's `isDirectlyOrIndirectlyLocal` method.
+ * Heuristic for detecting local/anonymous classes (JNI headers should not be generated for these classes).
+ *
+ * This checks whether the class node has a non-null `outerMethod`, which is commonly true or local classes (classes defined inside a
+ * method or lambda).
+ *
+ * This is not foolproof. ASM doesn't provide a direct way to check if a class is local or anonymous. This mimics the behavior of javac's
+ * `isDirectlyOrIndirectlyLocal()`.
  */
 internal val ClassNode.isLocal: Boolean get() = outerMethod != null
 
@@ -49,6 +54,22 @@ internal val MethodNode.isStatic: Boolean get() = (access and Opcodes.ACC_STATIC
 internal val FieldNode.isStaticFinal: Boolean
   get() = (access and (Opcodes.ACC_STATIC or Opcodes.ACC_FINAL)) == (Opcodes.ACC_STATIC or Opcodes.ACC_FINAL)
 
+/**
+ * Maps a JVM type (ASM's [Type]) to its corresponding JNI C type.
+ *
+ * This is used when generating method parameter and return types for `JNIEXPORT` function
+ * declarations in C/C++ header files.
+ *
+ * ###### Example
+ * The `Int` return type from this method...
+ * ```kotlin
+ * external fun nativeMethod(): Int
+ * ```
+ * maps as `jint` for the header.
+ * ```c
+ * JNIEXPORT jint JNICALL ...
+ * ```
+ */
 internal val Type.jniType: String get() = when (this.sort) {
   Type.VOID -> "void"
   Type.BOOLEAN -> "jboolean"
@@ -89,6 +110,36 @@ internal val Type.jniType: String get() = when (this.sort) {
   else -> throw IllegalArgumentException("Unknown type: $this")
 }
 
+/**
+ * Converts a static final field's value into a valid C preprocessor constant
+ * according to JNI header rules.
+ *
+ * This is used for generating `#define` statements for constants in header files.
+ * It handles Java primitive values, Strings, and encodes them in a JNI-compatible way:
+ *
+ * ###### Example
+ * This java static final
+ * ```kotlin
+ * package com.example
+ *
+ * class MyClass {
+ *   companion object {
+ *     const val BUILD_ID = 123456789L
+ *   }
+ *   external fun nativeMethod()
+ * }
+ * ```
+ * appends `i64` for Windows...
+ * ```c
+ * #undef com_example_MyClass_BUILD_ID
+ * #define com_example_MyClass_BUILD_ID 123456789i64
+ * ```
+ * and `LL` for other operating systems
+ * ```c
+ * #undef com_example_MyClass_BUILD_ID
+ * #define com_example_MyClass_BUILD_ID 123456789LL
+ * ```
+ */
 internal val FieldNode.jniConstant: String?
   get() {
     val value = this.value ?: return null

@@ -68,19 +68,16 @@ class KtjniPluginTest {
       .build()
 
     assertThat(result.task(":generateJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
-
-    assertThat(result.task(":generateJniHeadersCompileKotlin")?.outcome)
-      .isIn(listOf(TaskOutcome.SUCCESS, TaskOutcome.UP_TO_DATE))
-
-    assertThat(result.task(":generateJniHeadersCompileJava")?.outcome)
-      .isIn(listOf(TaskOutcome.NO_SOURCE, TaskOutcome.UP_TO_DATE))
+    assertThat(result.task(":generateJniHeadersCompileKotlin")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    // The Kotlin plugin creates a compileJava task for compatibility, so :generateJniHeadersCompileJava exists but is a no-op.
+    assertThat(result.task(":generateJniHeadersCompileJava")?.outcome).isEqualTo(TaskOutcome.NO_SOURCE)
     // Verify that no Scala/Groovy tasks were executed
     assertThat(result.tasks.map { it.path }).apply {
       doesNotContain(":generateJniHeadersCompileScala")
       doesNotContain(":generateJniHeadersCompileGroovy")
     }
 
-    assertHeaders()
+    assertHeaders("kotlin")
   }
 
   @Test
@@ -117,10 +114,7 @@ class KtjniPluginTest {
       .build()
 
     assertThat(result.task(":generateJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
-
-    assertThat(result.task(":generateJniHeadersCompileJava")?.outcome)
-      .isIn(listOf(TaskOutcome.SUCCESS, TaskOutcome.UP_TO_DATE))
-
+    assertThat(result.task(":generateJniHeadersCompileJava")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     // Verify that no Kotlin/Scala/Groovy tasks were executed
     assertThat(result.tasks.map { it.path }).apply {
       doesNotContain(":generateJniHeadersCompileKotlin")
@@ -128,7 +122,7 @@ class KtjniPluginTest {
       doesNotContain(":generateJniHeadersCompileGroovy")
     }
 
-    assertHeaders()
+    assertHeaders("java")
   }
 
   @Test
@@ -170,24 +164,20 @@ class KtjniPluginTest {
       .build()
 
     assertThat(result.task(":generateJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
-
-    assertThat(result.task(":generateJniHeadersCompileScala")?.outcome)
-      .isIn(listOf(TaskOutcome.SUCCESS, TaskOutcome.UP_TO_DATE))
-
-    assertThat(result.task(":generateJniHeadersCompileJava")?.outcome)
-      .isIn(listOf(TaskOutcome.NO_SOURCE, TaskOutcome.UP_TO_DATE))
-
+    assertThat(result.task(":generateJniHeadersCompileScala")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    // The Scala plugin creates a compileJava task for compatibility, so :generateJniHeadersCompileJava exists but is a no-op.
+    assertThat(result.task(":generateJniHeadersCompileJava")?.outcome).isEqualTo(TaskOutcome.NO_SOURCE)
     // Verify that no Kotlin/Groovy tasks were executed
     assertThat(result.tasks.map { it.path }).apply {
       doesNotContain(":generateJniHeadersCompileKotlin")
       doesNotContain(":generateJniHeadersCompileGroovy")
     }
 
-    assertHeaders()
+    assertHeaders("scala")
   }
 
-  private fun assertHeaders() {
-    val headerDir = File(testProjectDir.toFile(), "build/generated/sources/headers")
+  private fun assertHeaders(language: String) {
+    val headerDir = File(testProjectDir.toFile(), "build/generated/sources/headers/$language")
     assertThat(headerDir.exists()).isTrue()
 
     val headerFile = File(headerDir, "com_example_Example.h")
