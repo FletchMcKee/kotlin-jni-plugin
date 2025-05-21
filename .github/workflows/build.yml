@@ -2,9 +2,10 @@ name: build
 
 on:
   push:
-    branches: [ "trunk" ]
-  pull_request:
-    branches: [ "trunk" ]
+    branches: ["trunk"]
+    tags-ignore: ["**"]
+  pull_request: {}
+  workflow_dispatch: {}
 
 jobs:
   build:
@@ -36,3 +37,26 @@ jobs:
 
       - name: Build with Gradle
         run: ./gradlew build
+
+  publish:
+    name: "publish"
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/trunk' && github.repository == 'fletchmckee/ktjni' }}
+    needs:
+      - build
+    steps:
+      - name: Set up Java version
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version-file: .github/workflows/.java-version
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - run: ./gradlew publish --no-configuration-cache
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.SONATYPE_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.SONATYPE_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.SIGNING_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_IN_MEMORY_KEY }}
