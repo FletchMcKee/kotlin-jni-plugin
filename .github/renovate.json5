@@ -3,9 +3,6 @@
   extends: [
     'config:recommended',
   ],
-  schedule: [
-    "* * * * 1-5"
-  ],
   ignorePresets: [
     // Get latest version and are not pinned to old versions.
     // Taken from Jake Wharton's [blog](https://jakewharton.com/using-renovate-to-update-build-jdk/) f
