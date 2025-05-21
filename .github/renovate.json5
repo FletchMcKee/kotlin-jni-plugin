@@ -5,7 +5,7 @@
   ],
   ignorePresets: [
     // Get latest version and are not pinned to old versions.
-    // Taken from Jake Wharton's [blog](https://jakewharton.com/using-renovate-to-update-build-jdk/) f
+    // Credit https://jakewharton.com/using-renovate-to-update-build-jdk/
     'workarounds:javaLTSVersions',
   ],
   customManagers: [
