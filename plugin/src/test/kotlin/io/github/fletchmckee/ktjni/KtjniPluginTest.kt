@@ -230,10 +230,11 @@ class KtjniPluginTest {
   }
 }
 
+@Suppress("unused") // Invoked from ParameterizedTest
 enum class KotlinJdkVersion(val kotlin: String, val jdk: Int) {
   K1_7_J11("1.7.10", 11),
   K1_8_J17("1.8.0", 17),
   K1_9_J17("1.9.23", 17),
   K2_0_J21("2.0.0", 21),
-  K2_1_J21("2.1.21", 21);
+  K2_1_J21("2.1.21", 21),
 }

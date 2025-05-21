@@ -2,7 +2,6 @@ public abstract interface annotation class io/github/fletchmckee/ktjni/KtjniDsl 
 }
 
 public abstract interface class io/github/fletchmckee/ktjni/KtjniExtension {
-	public abstract fun getIgnoreBuildTypes ()Lorg/gradle/api/provider/ListProperty;
 	public abstract fun getOutputDir ()Lorg/gradle/api/file/DirectoryProperty;
 }
 

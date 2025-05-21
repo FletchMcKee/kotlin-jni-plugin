@@ -16,45 +16,38 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 @Suppress("unused") // Invoked reflectively
 public class KtjniPlugin : Plugin<Project> {
-  override fun apply(target: Project) {
-    val extension = target.extensions.create("ktjni", KtjniExtension::class.java)
+  override fun apply(target: Project): Unit = with(target) {
+    val extension = extensions.create("ktjni", KtjniExtension::class.java)
 
-    val allHeaderOutputs = target.objects.fileCollection()
+    val allHeaderOutputs = objects.fileCollection()
 
-    target.tasks.register("generateJniHeaders") {
+    tasks.register("generateJniHeaders") {
       group = GROUP
       description = "Generates JNI headers for all JVM compile tasks"
 
+      // This connects all header task outputs as inputs to this aggregator task. Using `inputs.files` instead of `dependsOn` allows for
+      // better up-to-date checking and avoids eager task resolution that `dependsOn` would cause.
       inputs.files(allHeaderOutputs)
     }
 
-    target.afterEvaluate {
-      val ignoreBuildTypes = extension.ignoreBuildTypes.convention(emptyList<String>()).get()
-      // KotlinCompile types extend from AbstractKotlinCompile and not AbstractCompile.
-      project.tasks
-        .withType(AbstractKotlinCompile::class.java)
-        .filter { task -> ignoreBuildTypes.none { task.name.contains(it, ignoreCase = true) } }
-        .forEach { compileTask ->
-          registerHeaderTask(
-            compileTask = compileTask,
-            classDir = compileTask.destinationDirectory,
-            extension = extension,
-            aggregate = allHeaderOutputs,
-          )
-        }
+    // KotlinCompile types extend from AbstractKotlinCompile and not AbstractCompile.
+    tasks.withType(AbstractKotlinCompile::class.java) {
+      registerHeaderTask(
+        compileTask = this,
+        classDir = destinationDirectory,
+        extension = extension,
+        aggregate = allHeaderOutputs,
+      )
+    }
 
-      // AbstractCompile provides the rest of the JVM-based language compilation tasks.
-      project.tasks
-        .withType(AbstractCompile::class.java)
-        .filter { task -> ignoreBuildTypes.none { task.name.contains(it, ignoreCase = true) } }
-        .forEach { compileTask ->
-          registerHeaderTask(
-            compileTask = compileTask,
-            classDir = compileTask.destinationDirectory,
-            extension = extension,
-            aggregate = allHeaderOutputs,
-          )
-        }
+    // AbstractCompile provides the rest of the JVM-based language compilation tasks.
+    tasks.withType(AbstractCompile::class.java) {
+      registerHeaderTask(
+        compileTask = this,
+        classDir = destinationDirectory,
+        extension = extension,
+        aggregate = allHeaderOutputs,
+      )
     }
   }
 
@@ -70,6 +63,8 @@ public class KtjniPlugin : Plugin<Project> {
       KtjniTask::class.java,
     ) {
       sourceDir.set(classDir)
+      // If the user specified an outputDir in the extension, use that. Otherwise, use a default buildDirectory based on the language.
+      // This lazy property resolution is deferred until execution time.
       outputDir.convention(
         extension.outputDir.orElse(
           project.layout.buildDirectory.dir("generated/sources/headers").map { it.dir(compileTask.languageName) },
@@ -83,9 +78,11 @@ public class KtjniPlugin : Plugin<Project> {
       }
     }
 
+    // Add this task's output to the aggregator collection. Using `flatMap` preserves the lazy/deferred property resolution pattern.
     aggregate.from(generateJniHeadersTask.flatMap { it.outputDir })
   }
 
+  // This is a temporary hack until I come up with a better option. Also would be preferable to include source set.
   private val Task.languageName: String get() = when (this) {
     is KotlinCompile -> "kotlin"
     is JavaCompile -> "java"

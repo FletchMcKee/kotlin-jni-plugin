@@ -43,5 +43,4 @@ dependencies {
 
 ktjni {
   outputDir = project.layout.projectDirectory.dir("src/main/cpp")
-  ignoreBuildTypes = listOf("release")
 }

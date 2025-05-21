@@ -3,7 +3,6 @@
 package io.github.fletchmckee.ktjni
 
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.provider.ListProperty
 
 @DslMarker
 public annotation class KtjniDsl
@@ -21,16 +20,4 @@ public interface KtjniExtension {
    * Default: `{projectDir}/build/generated/sources/headers`.
    */
   public val outputDir: DirectoryProperty
-
-  /**
-   * Specifies build types to ignore during header generation.
-   *
-   * This is useful in Android projects or multi-variant builds where you want to skip header generation for certain build types
-   * (e.g., "debug" or "androidTest").
-   *
-   * The matching is case-insensitive and works if the build type appears anywhere in the task name.
-   *
-   * Default: empty list (generate headers for all build types)
-   */
-  public val ignoreBuildTypes: ListProperty<String>
 }
