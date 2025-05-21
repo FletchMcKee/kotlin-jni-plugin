@@ -13,16 +13,14 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 
 class KtjniPluginTest {
-  @TempDir
-  lateinit var testProjectDir: Path
+  @TempDir lateinit var testProjectDir: Path
 
   private lateinit var buildFile: File
   private lateinit var settingsFile: File
   private lateinit var srcDir: File
   private lateinit var testFile: File
 
-  @BeforeEach
-  fun setup() {
+  @BeforeEach fun setup() {
     val projectDir = testProjectDir.toFile()
     buildFile = File(projectDir, "build.gradle.kts")
     settingsFile = File(projectDir, "settings.gradle.kts")
@@ -34,8 +32,7 @@ class KtjniPluginTest {
     )
   }
 
-  @Test
-  fun `plugin applies and generates headers for Kotlin`() {
+  @Test fun `plugin applies and generates headers for Kotlin`() {
     val parent = testProjectDir.toFile()
     srcDir = File(parent, "src/main/kotlin/com/example").apply { mkdirs() }
     testFile = File(srcDir, "Example.kt")
@@ -77,8 +74,7 @@ class KtjniPluginTest {
     assertHeaders(parent, "kotlin")
   }
 
-  @Test
-  fun `plugin applies and generates headers for Java`() {
+  @Test fun `plugin applies and generates headers for Java`() {
     val parent = testProjectDir.toFile()
     srcDir = File(parent, "src/main/java/com/example").apply { mkdirs() }
     testFile = File(srcDir, "Example.java")
@@ -119,8 +115,7 @@ class KtjniPluginTest {
     assertHeaders(parent, "java")
   }
 
-  @Test
-  fun `plugin applies and generates headers for Scala`() {
+  @Test fun `plugin applies and generates headers for Scala`() {
     val parent = testProjectDir.toFile()
     srcDir = File(parent, "src/main/scala/com/example").apply { mkdirs() }
     testFile = File(srcDir, "Example.scala")
