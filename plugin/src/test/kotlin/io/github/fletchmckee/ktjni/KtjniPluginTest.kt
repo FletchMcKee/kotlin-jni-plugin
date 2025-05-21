@@ -11,6 +11,8 @@ import org.gradle.testkit.runner.TaskOutcome
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 
 class KtjniPluginTest {
   @TempDir lateinit var testProjectDir: Path
@@ -32,7 +34,9 @@ class KtjniPluginTest {
     )
   }
 
-  @Test fun `plugin applies and generates headers for Kotlin`() {
+  @ParameterizedTest
+  @EnumSource(KotlinJdkVersion::class)
+  fun `plugin applies and generates headers for Kotlin`(kotlinJdkVersion: KotlinJdkVersion) {
     val parent = testProjectDir.toFile()
     srcDir = File(parent, "src/main/kotlin/com/example").apply { mkdirs() }
     testFile = File(srcDir, "Example.kt")
@@ -48,13 +52,27 @@ class KtjniPluginTest {
 
     buildFile.writeText(
       """
+      import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+      import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
       plugins {
-        kotlin("jvm") version "1.9.23"
+        kotlin("jvm") version "${kotlinJdkVersion.kotlin}"
         id("io.github.fletchmckee.ktjni")
       }
 
       repositories {
         mavenCentral()
+      }
+
+      java {
+        sourceCompatibility = JavaVersion.VERSION_${kotlinJdkVersion.jdk}
+        targetCompatibility = JavaVersion.VERSION_${kotlinJdkVersion.jdk}
+      }
+
+      tasks.withType<KotlinCompile> {
+        compilerOptions {
+          jvmTarget.set(JvmTarget.JVM_${kotlinJdkVersion.jdk})
+        }
       }
       """.trimIndent(),
     )
@@ -210,4 +228,12 @@ class KtjniPluginTest {
 
     """.trimIndent()
   }
+}
+
+enum class KotlinJdkVersion(val kotlin: String, val jdk: Int) {
+  K1_7_J11("1.7.10", 11),
+  K1_8_J17("1.8.0", 17),
+  K1_9_J17("1.9.23", 17),
+  K2_0_J21("2.0.0", 21),
+  K2_1_J21("2.1.21", 21);
 }

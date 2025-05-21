@@ -22,7 +22,7 @@ java {
   targetCompatibility = JavaVersion.VERSION_11
 }
 
-tasks.withType<KotlinCompile>().configureEach {
+tasks.withType<KotlinCompile> {
   compilerOptions {
     jvmTarget.set(JvmTarget.JVM_11)
   }
