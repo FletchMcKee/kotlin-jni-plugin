@@ -94,3 +94,10 @@ JNIEXPORT jbyteArray JNICALL Java_com_example_Crypto_sha256
 > [!NOTE]
 > The current alpha version requires manual header generation. The goal is to integrate this process automatically into the build lifecycle, so headers are generated during compilation without manual intervention. 
 > This automatic integration is currently a work in progress.
+>
+> However, header generation can be added as a build step in your CI/CD pipelines by running the command before any that would depend on it:
+>
+>```yaml
+>  - name: Generate JNI headers
+>    run: ./gradlew generateJniHeaders
+>```
