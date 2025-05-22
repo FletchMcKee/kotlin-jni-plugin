@@ -13,5 +13,5 @@ internal abstract class KtjniWorkerTask : DefaultTask() {
   @get:Inject
   internal abstract val workerExecutor: WorkerExecutor
 
-  internal fun workQueue(): WorkQueue = workerExecutor.processIsolation()
+  internal fun workQueue(): WorkQueue = workerExecutor.noIsolation()
 }
