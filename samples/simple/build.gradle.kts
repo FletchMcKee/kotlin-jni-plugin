@@ -40,8 +40,3 @@ android {
 dependencies {
   testImplementation(libs.junit)
 }
-
-// This is flaky but doing this as a test.
-tasks.matching { it.name.startsWith("buildCMake") }.configureEach {
-  dependsOn("generateJniHeaders")
-}

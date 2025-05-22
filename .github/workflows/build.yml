@@ -35,6 +35,9 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Generate JNI headers
+        run: ./gradlew :samples:simple:generateJniHeaders
+
       - name: Build with Gradle
         run: ./gradlew build
 
