@@ -89,7 +89,7 @@ class KtjniPluginTest {
       doesNotContain(":generateJniHeadersCompileGroovy")
     }
 
-    assertHeaders(parent, "kotlin")
+    assertHeaders(parent, "compileKotlin")
   }
 
   @Test fun `plugin applies and generates headers for Java`() {
@@ -130,7 +130,7 @@ class KtjniPluginTest {
       doesNotContain(":generateJniHeadersCompileGroovy")
     }
 
-    assertHeaders(parent, "java")
+    assertHeaders(parent, "compileJava")
   }
 
   @Test fun `plugin applies and generates headers for Scala`() {
@@ -177,7 +177,7 @@ class KtjniPluginTest {
       doesNotContain(":generateJniHeadersCompileGroovy")
     }
 
-    assertHeaders(parent, "scala")
+    assertHeaders(parent, "compileScala")
   }
 
   private fun createTestRunner(
