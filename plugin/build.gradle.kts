@@ -36,7 +36,7 @@ dependencies {
   implementation(gradleApi())
   implementation(localGroovy())
   implementation(libs.asm)
-  implementation(libs.asm.util)
+  implementation(libs.asm.tree)
   implementation(libs.kotlin.gradle.plugin)
 
   // Test libraries
