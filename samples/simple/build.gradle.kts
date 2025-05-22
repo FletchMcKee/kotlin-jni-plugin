@@ -41,6 +41,7 @@ dependencies {
   testImplementation(libs.junit)
 }
 
-ktjni {
-  outputDir = project.layout.projectDirectory.dir("src/main/cpp")
+// This is flaky but doing this as a test.
+tasks.matching { it.name.startsWith("buildCMake") }.configureEach {
+  dependsOn("generateJniHeaders")
 }
