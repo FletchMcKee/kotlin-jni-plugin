@@ -36,7 +36,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Generate JNI headers
-        run: ./gradlew :samples:simple:generateJniHeaders
+        run: ./gradlew :samples:simple:generateJniHeaders --info
 
       - name: Build with Gradle
         run: ./gradlew build

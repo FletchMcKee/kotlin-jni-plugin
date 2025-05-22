@@ -29,14 +29,14 @@ internal abstract class GenerateJniHeaders : WorkAction<GenerateJniHeadersParams
     val srcDir = parameters.sourceDir.asFile.get()
     val outputDir = parameters.outputDir.asFile.get()
     val start = System.currentTimeMillis()
-    logger.lifecycle("Ktjni - generating JNI headers for $srcDir")
+    logger.info("Ktjni - generating JNI headers for $srcDir")
     srcDir.walkTopDown()
       .filter { it.extension == "class" }
       .mapNotNull { classFile -> processClassFile(classFile = classFile, srcDir = srcDir, outputDir = outputDir) }
       .count()
       .also { count ->
         val delta = System.currentTimeMillis() - start
-        logger.lifecycle("Ktjni - completed writing $count header file(s) in $delta ms")
+        logger.info("Ktjni - completed writing $count header file(s) in $delta ms")
       }
   }
 
