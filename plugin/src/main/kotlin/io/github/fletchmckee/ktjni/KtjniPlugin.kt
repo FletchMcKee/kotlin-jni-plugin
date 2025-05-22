@@ -67,7 +67,7 @@ public class KtjniPlugin : Plugin<Project> {
       // This lazy property resolution is deferred until execution time.
       outputDir.convention(
         extension.outputDir.orElse(
-          project.layout.buildDirectory.dir("generated/sources/headers").map { it.dir(compileTask.languageName) },
+          project.layout.buildDirectory.dir("generated/sources/headers").map { it.dir(compileTask.name) },
         ),
       )
       group = GROUP
