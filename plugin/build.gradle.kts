@@ -36,11 +36,12 @@ dependencies {
   // These need to be bundled with the plugin.
   implementation(libs.asm)
   implementation(libs.asm.tree)
+  // Need to look into whether this needs to be bundled.
+  implementation(libs.kotlin.gradle.plugin)
 
   // Provided by Gradle runtime.
   compileOnly(gradleApi())
   compileOnly(localGroovy())
-  compileOnly(libs.kotlin.gradle.plugin)
 
   // Test libraries
   testImplementation(libs.junit.jupiter)
