@@ -1,4 +1,4 @@
-![Build status](https://github.com/fletchmckee/ktjni/actions/workflows/build.yml/badge.svg)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.fletchmckee.ktjni/ktjni-plugin)](https://search.maven.org/search?q=g:io.github.fletchmckee.ktjni) ![Build status](https://github.com/fletchmckee/ktjni/actions/workflows/build.yml/badge.svg)
 
 
 # Ktjni
@@ -10,7 +10,7 @@
 >
 > Currently the headers are generated in the module's build directory at the following path:
 > ```
-> ~/build/generated/headers/source/{language}/{compileTaskName}
+> ~/build/generated/sources/headers/{language}/{compileTaskName}
 > ```
 >
 > This is subject to change.
