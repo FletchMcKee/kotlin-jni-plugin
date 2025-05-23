@@ -33,11 +33,14 @@ tasks.named<Test>("test") {
 }
 
 dependencies {
-  implementation(gradleApi())
-  implementation(localGroovy())
+  // These need to be bundled with the plugin.
   implementation(libs.asm)
   implementation(libs.asm.tree)
-  implementation(libs.kotlin.gradle.plugin)
+
+  // Provided by Gradle runtime.
+  compileOnly(gradleApi())
+  compileOnly(localGroovy())
+  compileOnly(libs.kotlin.gradle.plugin)
 
   // Test libraries
   testImplementation(libs.junit.jupiter)
@@ -45,6 +48,7 @@ dependencies {
   testImplementation(libs.kotlin.test.junit5)
   testImplementation(libs.google.truth)
   testImplementation(gradleTestKit())
+
   testRuntimeOnly(libs.junit.platform.launcher)
 }
 
@@ -57,11 +61,9 @@ gradlePlugin {
   }
 }
 
-/**
- * This module exists in two contexts:
- *  1. In the root project where it's built as a publishable artifact
- *  2. In the build-support includeBuild where it's used for internal development
- */
+// This module exists in two contexts:
+// 1. In the root project where it's built as a publishable artifact
+// 2. In the build-support includeBuild where it's used for internal development
 if (rootProject.name == "ktjni") {
   mavenPublishing {
     configure(

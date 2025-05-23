@@ -8,12 +8,21 @@ plugins {
 
 android {
   namespace = "io.github.fletchmckee.ktjni.samples.demo"
-  compileSdk = 35
+  compileSdk =
+    libs.versions.compileSdk
+      .get()
+      .toInt()
 
   defaultConfig {
     applicationId = "io.github.fletchmckee.ktjni.samples.demo"
-    minSdk = 26
-    targetSdk = 35
+    minSdk =
+      libs.versions.minSdk
+        .get()
+        .toInt()
+    targetSdk =
+      libs.versions.targetSdk
+        .get()
+        .toInt()
     versionCode = 1
     versionName = "1.0"
 
