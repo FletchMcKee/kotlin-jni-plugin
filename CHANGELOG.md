@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [0.0.1-alpha01] 2025-05-23
+## [0.0.1-alpha01] - 2025-05-23
 
 Initial (alpha) Release
 
