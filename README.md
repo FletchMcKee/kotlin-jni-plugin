@@ -5,12 +5,12 @@
 
 **Ktjni** is a Gradle plugin that generates JNI headers from Kotlin, Java, or Scala classes containing external native methods.  
 
-> [!WARNING]
+> [!IMPORTANT]
 > This plugin is in its alpha stage. Header generation currently requires manual execution and does not yet integrate automatically with the build process.
 >
 > Currently the headers are generated in the module's build directory at the following path:
 > ```
-> ~/build/generated/sources/headers/{language}/{compileTaskName}
+> ~/build/generated/sources/headers/{compileTaskName}
 > ```
 >
 > This is subject to change.
