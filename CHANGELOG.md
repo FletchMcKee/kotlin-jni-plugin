@@ -7,5 +7,5 @@
 Initial (alpha) Release
 
 [Unreleased]: https://github.com/fletchmckee/ktjni/compare/0.0.1-alpha01...HEAD
-[0.0.1-alpha01]: https://github.com/fletchmckee/ktjni/compare/0.0.1-alpha01
+[0.0.1-alpha01]: https://github.com/fletchmckee/ktjni/releases/tag/0.0.1-alpha01
 
