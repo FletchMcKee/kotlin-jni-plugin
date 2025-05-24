@@ -3,14 +3,14 @@
 
 # Ktjni
 
-**Ktjni** is a Gradle plugin that generates JNI headers from Kotlin, Java, or Scala classes containing external native methods.  
+**Ktjni** is a Gradle plugin that generates JNI headers from Kotlin, Java, or Scala classes containing external native methods.
 
 > [!IMPORTANT]
 > This plugin is in its alpha stage. Header generation currently requires manual execution and does not yet integrate automatically with the build process.
 >
 > Currently the headers are generated in the module's build directory at the following path:
 > ```
-> ~/build/generated/sources/headers/{compileTaskName}
+> ~/build/generated/sources/headers/{language}/{sourceSet}
 > ```
 >
 > This is subject to change.
@@ -21,7 +21,7 @@
 
 ```gradle
 plugins {
-  id("io.github.fletchmckee.ktjni") version "0.0.1-alpha01"
+  id("io.github.fletchmckee.ktjni") version "0.0.1-alpha02"
 }
 ```
 
@@ -100,7 +100,7 @@ class Crypto {
 
 ## Roadmap
 > [!NOTE]
-> The current alpha version requires manual header generation. The goal is to integrate this process automatically into the build lifecycle, so headers are generated during compilation without manual intervention. 
+> The current alpha version requires manual header generation. The goal is to integrate this process automatically into the build lifecycle, so headers are generated during compilation without manual intervention.
 > This automatic integration is currently a work in progress.
 >
 > However, header generation can be added as a build step in your CI/CD pipelines by running the command before any that would depend on it:
