@@ -27,7 +27,7 @@ class KtjniPluginTest {
       org.gradle.jvmargs=-Xmx1g -XX:MaxMetaspaceSize=256m
       org.gradle.caching=false
       org.gradle.daemon=false
-      """.trimIndent()
+      """.trimIndent(),
     )
     buildFile = File(projectDir, "build.gradle.kts")
     settingsFile = File(projectDir, "settings.gradle.kts")
