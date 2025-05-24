@@ -26,7 +26,6 @@ internal abstract class GenerateJniHeaders : WorkAction<GenerateJniHeadersParams
   private val logger = Logging.getLogger(GenerateJniHeaders::class.java)
 
   override fun execute() {
-    parameters.outputDir.get().asFile.deleteRecursively()
     val srcDir = parameters.sourceDir.asFile.get()
     val outputDir = parameters.outputDir.asFile.get()
     val start = System.currentTimeMillis()
