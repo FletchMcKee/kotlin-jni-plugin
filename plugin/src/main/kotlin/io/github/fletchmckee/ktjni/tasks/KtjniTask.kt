@@ -1,7 +1,8 @@
 // Copyright 2025, Colin McKee
 // SPDX-License-Identifier: Apache-2.0
-package io.github.fletchmckee.ktjni
+package io.github.fletchmckee.ktjni.tasks
 
+import io.github.fletchmckee.ktjni.internal.GenerateJniHeaders
 import javax.inject.Inject
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.CacheableTask

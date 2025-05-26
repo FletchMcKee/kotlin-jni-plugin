@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 @file:Suppress("NOTHING_TO_INLINE")
 
-package io.github.fletchmckee.ktjni
+package io.github.fletchmckee.ktjni.util
 
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Type

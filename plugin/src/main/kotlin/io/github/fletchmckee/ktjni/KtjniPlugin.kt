@@ -2,9 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.fletchmckee.ktjni
 
+import io.github.fletchmckee.ktjni.internal.PluginId
+import io.github.fletchmckee.ktjni.tasks.KtjniTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
@@ -19,7 +22,7 @@ import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompile
 public class KtjniPlugin : Plugin<Project> {
   override fun apply(target: Project): Unit = with(target) {
     val extension = extensions.create("ktjni", KtjniExtension::class.java)
-    // This connects all header task outputs as inputs to this aggregator task.
+    // Connects all header task outputs as inputs to this aggregator task.
     val aggregate = objects.fileCollection()
 
     tasks.register("generateJniHeaders") {
@@ -38,34 +41,48 @@ public class KtjniPlugin : Plugin<Project> {
   }
 
   private fun Project.configureKotlin(
-    extension: KtjniExtension,
+    ktjniExtension: KtjniExtension,
     aggregate: ConfigurableFileCollection,
   ) {
     // Kotlin Multiplatform
-    plugins.withId("org.jetbrains.kotlin.multiplatform") {
+    plugins.withId(PluginId.KotlinMultiplatform.id) {
       val kotlinExtension = extensions.getByType(KotlinMultiplatformExtension::class.java)
       kotlinExtension.targets.all {
         compilations.all {
+          // The only KMP platforms we need registrations for are `jvm` or `androidJvm`.
           if (platformType.name == "jvm" || platformType.name == "androidJvm") {
-            registerKotlinCompilationHeaderTask(this, extension, aggregate, platformType.name)
+            registerKotlinCompilationHeaderTask(
+              compilation = this,
+              ktjniExtension = ktjniExtension,
+              aggregate = aggregate,
+              target = target.name,
+            )
           }
         }
       }
     }
 
     // Kotlin JVM
-    plugins.withId("org.jetbrains.kotlin.jvm") {
+    plugins.withId(PluginId.KotlinJvm.id) {
       val kotlinExtension = extensions.getByType(KotlinJvmProjectExtension::class.java)
       kotlinExtension.target.compilations.all {
-        registerKotlinCompilationHeaderTask(this, extension, aggregate)
+        registerKotlinCompilationHeaderTask(
+          compilation = this,
+          ktjniExtension = ktjniExtension,
+          aggregate = aggregate,
+        )
       }
     }
 
     // Kotlin Android
-    plugins.withId("org.jetbrains.kotlin.android") {
+    plugins.withId(PluginId.KotlinAndroid.id) {
       val kotlinExtension = extensions.getByType(KotlinAndroidProjectExtension::class.java)
       kotlinExtension.target.compilations.all {
-        registerKotlinCompilationHeaderTask(this, extension, aggregate)
+        registerKotlinCompilationHeaderTask(
+          compilation = this,
+          ktjniExtension = ktjniExtension,
+          aggregate = aggregate,
+        )
       }
     }
   }
@@ -74,7 +91,7 @@ public class KtjniPlugin : Plugin<Project> {
     extension: KtjniExtension,
     aggregate: ConfigurableFileCollection,
   ) {
-    plugins.withId("java") {
+    plugins.withType(JavaBasePlugin::class.java) {
       val javaExtension = extensions.getByName("sourceSets") as SourceSetContainer
       javaExtension.all {
         val compileTaskProvider = tasks.named(compileJavaTaskName, JavaCompile::class.java)
@@ -109,24 +126,21 @@ public class KtjniPlugin : Plugin<Project> {
 
   private fun Project.registerKotlinCompilationHeaderTask(
     compilation: KotlinCompilation<*>,
-    extension: KtjniExtension,
+    ktjniExtension: KtjniExtension,
     aggregate: ConfigurableFileCollection,
-    target: String = "", // For KMP
+    target: String = "", // For Kotlin Multiplatform
   ) {
     val taskSuffix = compilation.name.taskSuffix(target)
     val taskName = "generateKotlin${taskSuffix.replaceFirstChar(Char::uppercase)}JniHeaders"
 
-    val generateJniHeadersTask = tasks.register(
-      taskName,
-      KtjniTask::class.java,
-    ) {
+    val generateJniHeadersTask = tasks.register(taskName, KtjniTask::class.java) {
       sourceDir.set(
         compilation.compileTaskProvider.flatMap { compileTask ->
           (compileTask as AbstractKotlinCompile<*>).destinationDirectory
         },
       )
       outputDir.convention(
-        extension.outputDir.orElse(
+        ktjniExtension.outputDir.orElse(
           project.layout.buildDirectory.dir("generated/sources/headers/kotlin").map { baseDir ->
             baseDir.dir(taskSuffix)
           },
@@ -180,7 +194,6 @@ public class KtjniPlugin : Plugin<Project> {
     aggregate: ConfigurableFileCollection,
   ) {
     val taskName = "generateScala${sourceSetName.replaceFirstChar(Char::uppercase)}JniHeaders"
-
     val generateJniHeadersTask = tasks.register(taskName, KtjniTask::class.java) {
       sourceDir.set(
         compileTaskProvider.flatMap { it.destinationDirectory },

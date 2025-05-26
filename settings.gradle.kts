@@ -25,6 +25,7 @@ dependencyResolutionManagement {
 rootProject.name = "ktjni"
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+enableFeaturePreview("STABLE_CONFIGURATION_CACHE")
 
 include(
   ":plugin",

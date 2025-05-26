@@ -1,7 +1,9 @@
 // Copyright 2025, Colin McKee
 // SPDX-License-Identifier: Apache-2.0
-package io.github.fletchmckee.ktjni
+package io.github.fletchmckee.ktjni.internal
 
+import io.github.fletchmckee.ktjni.util.isLocal
+import io.github.fletchmckee.ktjni.util.needsHeader
 import java.io.File
 import java.io.FileInputStream
 import java.io.PrintWriter
@@ -28,11 +30,19 @@ internal abstract class GenerateJniHeaders : WorkAction<GenerateJniHeadersParams
   override fun execute() {
     val srcDir = parameters.sourceDir.asFile.get()
     val outputDir = parameters.outputDir.asFile.get()
+    // Removes stale files and also prevents creating empty directories for sourceSets that contain no external native methods.
+    outputDir.deleteRecursively()
     val start = System.currentTimeMillis()
     logger.info("Ktjni - generating JNI headers for $srcDir")
     srcDir.walkTopDown()
       .filter { it.extension == "class" }
-      .mapNotNull { classFile -> processClassFile(classFile = classFile, srcDir = srcDir, outputDir = outputDir) }
+      .mapNotNull { classFile ->
+        processClassFile(
+          classFile = classFile,
+          srcDir = srcDir,
+          outputDir = outputDir,
+        )
+      }
       .count()
       .also { count ->
         val delta = System.currentTimeMillis() - start
@@ -49,7 +59,7 @@ internal abstract class GenerateJniHeaders : WorkAction<GenerateJniHeadersParams
       node
     }
     logger.info("Processing class: ${classNode.name}")
-    // Skip local classes
+    // JNI does not include native methods in local classes.
     if (classNode.isLocal) return null
 
     // Find native methods and track method overloading
@@ -58,7 +68,6 @@ internal abstract class GenerateJniHeaders : WorkAction<GenerateJniHeadersParams
       .filter { it.needsHeader }
       .onEach { overloadedMethodMap.merge(it.name, 1, Int::plus) }
 
-    // Skip classes without native methods
     if (nativeMethods.isEmpty()) return null
 
     return writeJniHeader(
@@ -80,6 +89,9 @@ internal abstract class GenerateJniHeaders : WorkAction<GenerateJniHeadersParams
     val className = classNode.name.replace('/', '.')
     val fileName = className.replace(Regex("[.$]"), "_") + ".h"
     logger.info("Class {$className} contains native methods. Creating file $fileName")
+    // Necessary since we delete the outputDir recursively at the start of execution.
+    outputDir.mkdirs()
+
     val file = File(outputDir, fileName)
     PrintWriter(file).use { out ->
       val cName = className.toMangledJniName()

@@ -2,11 +2,18 @@
 // SPDX-License-Identifier: Apache-2.0
 @file:Suppress("NOTHING_TO_INLINE")
 
-package io.github.fletchmckee.ktjni
+package io.github.fletchmckee.ktjni.internal
 
+import io.github.fletchmckee.ktjni.util.isAsciiAlphanumeric
+import io.github.fletchmckee.ktjni.util.isStatic
+import io.github.fletchmckee.ktjni.util.isStaticFinal
+import io.github.fletchmckee.ktjni.util.jniConstant
+import io.github.fletchmckee.ktjni.util.jniType
+import io.github.fletchmckee.ktjni.util.orZero
 import java.io.File
 import java.io.FileInputStream
 import java.io.PrintWriter
+import kotlin.text.iterator
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.Type
 import org.objectweb.asm.tree.ClassNode

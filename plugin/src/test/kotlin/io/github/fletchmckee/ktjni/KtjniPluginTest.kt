@@ -34,7 +34,7 @@ class KtjniPluginTest {
 
   @ParameterizedTest
   @EnumSource(KotlinJdkVersion::class)
-  fun `plugin applies and generates headers for Kotlin Multiplatform`(kotlinJdkVersion: KotlinJdkVersion) {
+  fun `plugin applies and generates headers for Kotlin Multiplatform Kotlin classes`(kotlinJdkVersion: KotlinJdkVersion) {
     val parent = testProjectDir.toFile()
     srcDir = File(parent, "src/jvmMain/kotlin/com/example").apply { mkdirs() }
     testFile = File(srcDir, "Example.kt")
@@ -84,7 +84,69 @@ class KtjniPluginTest {
 
     assertThat(result.task(":generateJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     assertThat(result.task(":generateKotlinJvmMainJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    // The Java task should run but have NO-SOURCE as its result.
+    assertThat(result.task(":generateJavaJvmMainJniHeaders")?.outcome).isEqualTo(TaskOutcome.NO_SOURCE)
     assertHeaders(parent, "kotlin", "jvmMain")
+  }
+
+  @ParameterizedTest
+  @EnumSource(KotlinJdkVersion::class)
+  fun `plugin applies and generates headers for Kotlin Multiplatform Java classes`(kotlinJdkVersion: KotlinJdkVersion) {
+    val parent = testProjectDir.toFile()
+    srcDir = File(parent, "src/jvmMain/java/com/example").apply { mkdirs() }
+    testFile = File(srcDir, "Example.java")
+    testFile.writeText(
+      """
+      package com.example;
+
+      public class Example {
+        public native int exampleNative();
+      }
+      """.trimIndent(),
+    )
+
+    buildFile.writeText(
+      """
+      import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+      import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+      plugins {
+        kotlin("multiplatform") version "${kotlinJdkVersion.kotlin}"
+        id("io.github.fletchmckee.ktjni")
+      }
+
+      repositories {
+        mavenCentral()
+      }
+
+      kotlin {
+        jvm {
+          compilations.all {
+            kotlinOptions {
+              jvmTarget = "${kotlinJdkVersion.jdk}"
+            }
+          }
+
+          java {
+            sourceCompatibility = JavaVersion.VERSION_${kotlinJdkVersion.jdk}
+            targetCompatibility = JavaVersion.VERSION_${kotlinJdkVersion.jdk}
+          }
+        }
+      }
+      """.trimIndent(),
+    )
+
+    val result = createTestRunner(parent)
+      .build()
+
+    println("========= Output ========")
+    println(result.output)
+
+    assertThat(result.task(":generateJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    assertThat(result.task(":generateJavaJvmMainJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    // The Kotlin task should run but have NO-SOURCE as its result.
+    assertThat(result.task(":generateKotlinJvmMainJniHeaders")?.outcome).isEqualTo(TaskOutcome.NO_SOURCE)
+    assertHeaders(parent, "java", "jvmMain")
   }
 
   @ParameterizedTest
