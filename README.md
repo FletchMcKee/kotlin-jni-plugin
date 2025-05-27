@@ -5,35 +5,51 @@
 
 **Ktjni** is a Gradle plugin that generates JNI headers from Kotlin, Java, or Scala classes containing external native methods.
 
-> [!IMPORTANT]
-> This plugin is in its alpha stage. Header generation currently requires manual execution and does not yet integrate automatically with the build process.
->
-> Currently the headers are generated in the module's build directory at the following path:
-> ```
-> ~/build/generated/sources/headers/{language}/{sourceSet}
-> ```
->
-> This is subject to change.
+Manually writing JNI headers is tedious, error-prone, and a common source of runtime crashes due to signature mismatches. This plugin eliminates that pain by scanning compiled `.class` files using the [ASM](https://asm.ow2.io/) library to generate accurate, up-to-date headers that match your JVM method signatures.
 
-## Usage
+Since all JVM languages compile native method declarations to the same core bytecode structure, Ktjni works consistently across Kotlin, Java, and Scala codebases, regardless of compiler-specific attributes or metadata differences.
 
-#### 1. Add the plugin to your build.gradle.kts module(s) containing external native methods
+> [!NOTE]
+> **Beta limitations:** Header generation currently requires manual execution and does not yet automatically integrate with the build process.
+>
+> Currently the headers are generated in the project's build directory at the following path:
+> ```
+> {project.projectDir}/build/generated/sources/headers/{sourceType}/{sourceSet}
+> ```
+>
+> **CI/CD Usage:** You can add header generation as a build step in your pipelines:
+> ```yml
+>   - name: Generate JNI headers
+>     run: ./gradlew generateJniHeaders
+> ```
+
+## Getting started
+
+**1. Add Maven Central to your pluginManagment repositories**
 
 ```gradle
-plugins {
-  id("io.github.fletchmckee.ktjni") version "0.0.1-alpha02"
+pluginManagement {
+  repositories {
+    mavenCentral()
+  }
 }
 ```
 
-#### 2. Run the following command to generate JNI headers for any files containing native methods
+**2. Add the Ktjni plugin to your project's build.gradle.kts**
+
+```gradle
+plugins {
+  id("io.github.fletchmckee.ktjni") version "0.0.1-beta01"
+}
+```
+
+**3. Run the following command to generate JNI headers for any files containing external native methods**
 
 ```bash
 ./gradlew generateJniHeaders
 ```
 
 ## Example
-
-Ktjni scans `.class` files using the [ASM](https://asm.ow2.io/) library. While different JVM languages produce `.class` files with varying metadata and compiler-specific attributes, they all compile native method declarations to the same core JVM method signature.
 
 The following Kotlin class would produce the below [JNI Header](#jni-header):
 
@@ -98,14 +114,12 @@ class Crypto {
 </p>
 </details>
 
-## Roadmap
-> [!NOTE]
-> The current alpha version requires manual header generation. The goal is to integrate this process automatically into the build lifecycle, so headers are generated during compilation without manual intervention.
-> This automatic integration is currently a work in progress.
->
-> However, header generation can be added as a build step in your CI/CD pipelines by running the command before any that would depend on it:
->
->```yaml
->  - name: Generate JNI headers
->    run: ./gradlew generateJniHeaders
->```
+## Supported Plugins
+
+- [x] **Kotlin JVM** (`org.jetbrains.kotlin.jvm`)
+- [x] **Kotlin Multiplatform** (`org.jetbrains.kotlin.multiplatform`)
+- [x] **Kotlin Android** (`org.jetbrains.kotlin.android`)
+- [x] **Java** (via `java` or `java-library` plugins)
+- [x] **Scala** (`scala` plugin)
+- [ ] **Android build variants** (`com.android.library` or `com.android.application`) 
+  - Currently supports Kotlin compilation in Android projects. Java compilation support for Android build variants is planned for a future release.
