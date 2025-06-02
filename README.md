@@ -19,8 +19,8 @@ Since all JVM languages compile native method declarations to the same core byte
 >
 > **CI/CD Usage:** You can add header generation as a build step in your pipelines:
 > ```yml
->   - name: Generate JNI headers
->     run: ./gradlew generateJniHeaders
+> - name: Generate JNI headers
+>   run: ./gradlew generateJniHeaders
 > ```
 
 ## Getting started
@@ -45,7 +45,7 @@ plugins {
 
 **3. Run the following command to generate JNI headers for any files containing external native methods**
 
-```bash
+```console
 ./gradlew generateJniHeaders
 ```
 
@@ -98,7 +98,7 @@ JNIEXPORT jbyteArray JNICALL Java_com_example_Crypto_sha256
 package com.example;
 
 public class Crypto {
-    public native byte[] sha256(byte[] input);
+  public native byte[] sha256(byte[] input);
 }
 ```
 
