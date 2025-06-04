@@ -10,8 +10,6 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.gradle.kotlin.dsl.configure
 
-private val isCI = System.getenv("CI") == "true"
-
 @Suppress("unused") // Invoked reflectively
 class KtjniBuildPlugin : Plugin<Project> {
   override fun apply(target: Project) = with(target) {
@@ -27,10 +25,7 @@ private fun Project.configureSpotless() {
     val ktlintVersion = libs.findVersion("ktlint").get().requiredVersion
 
     kotlin {
-      when {
-        path == ":" -> target("build-support/src/**/*.kt", "build-support/settings/src/**/*.kt")
-        else -> target("src/**/*.kt")
-      }
+      target("src/**/*.kt")
       ktlint(ktlintVersion).editorConfigOverride(
         mapOf(
           "ktlint_standard_filename" to "disabled",
@@ -51,9 +46,9 @@ private fun Project.configureSpotless() {
 private fun Project.spotless(action: SpotlessExtension.() -> Unit) = extensions.configure<SpotlessExtension>(action)
 
 private fun Project.configureTesting() {
-  tasks.withType(AbstractTestTask::class.java).forEach { task ->
-    task.testLogging {
-      if (isCI) {
+  tasks.withType(AbstractTestTask::class.java).configureEach {
+    testLogging {
+      if (providers.environmentVariable("CI").isPresent) {
         events(TestLogEvent.FAILED, TestLogEvent.SKIPPED, TestLogEvent.PASSED)
       }
       exceptionFormat = TestExceptionFormat.FULL
