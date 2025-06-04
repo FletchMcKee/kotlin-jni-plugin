@@ -30,7 +30,9 @@ Since all JVM languages compile native method declarations to the same core byte
 ```gradle
 pluginManagement {
   repositories {
+    // Currently this plugin is only published to `mavenCentral()`
     mavenCentral()
+    gradlePluginPortal()
   }
 }
 ```
