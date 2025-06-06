@@ -29,6 +29,15 @@ class KtjniPluginTest {
     settingsFile.writeText(
       """
       rootProject.name = "test-project"
+
+      dependencyResolutionManagement {
+        repositories {
+          mavenLocal()
+          mavenCentral()
+          google()
+        }
+      }
+
       buildCache {
         local {
           directory = file("${localCacheDir.toURI()}")
@@ -207,7 +216,6 @@ class KtjniPluginTest {
       tasks.withType<KotlinCompile> {
         compilerOptions {
           jvmTarget.set(JvmTarget.valueOf("JVM_${kotlinJdkVersion.jdk}"))
-          kotlinOptions.freeCompilerArgs += "-Xclasspath-snapshot=disable"
         }
       }
       """.trimIndent(),
@@ -233,6 +241,74 @@ class KtjniPluginTest {
     assertThat(secondRun.task(":generateKotlinMainJniHeaders")?.outcome).isEqualTo(TaskOutcome.FROM_CACHE)
 
     assertHeaders(parent, "build/generated/sources/headers/kotlin/main")
+  }
+
+  @ParameterizedTest
+  @EnumSource(KotlinAndroidVersion::class)
+  fun `plugin applies and generates headers for Kotlin Android`(kotlinAndroid: KotlinAndroidVersion) {
+    val parent = testProjectDir.toFile()
+
+    srcDir = File(parent, "src/main/kotlin/com/example").apply { mkdirs() }
+    testFile = File(srcDir, "Example.kt")
+    testFile.writeText(
+      """
+      package com.example
+
+      class Example {
+        external fun exampleNative(): Int
+      }
+      """.trimIndent(),
+    )
+
+    buildFile.writeText(
+      """
+      import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+      import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+      plugins {
+        id("com.android.library") version "${kotlinAndroid.agp}"
+        kotlin("android") version "${kotlinAndroid.kotlin}"
+        id("io.github.fletchmckee.ktjni")
+      }
+
+      android {
+        compileSdk = 34
+        defaultConfig {
+          minSdk = 21
+          namespace = "com.example"
+        }
+
+        compileOptions {
+          sourceCompatibility = JavaVersion.VERSION_${kotlinAndroid.jdk}
+          targetCompatibility = JavaVersion.VERSION_${kotlinAndroid.jdk}
+        }
+      }
+
+      tasks.withType<KotlinCompile>().configureEach {
+        compilerOptions {
+          jvmTarget.set(JvmTarget.valueOf("JVM_${kotlinAndroid.jdk}"))
+        }
+      }
+      """.trimIndent(),
+    )
+
+    val firstRun = createAndroidTestRunner(parent).build()
+
+    assertThat(firstRun.task(":generateJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    assertThat(firstRun.task(":generateKotlinDebugJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    assertThat(firstRun.task(":generateKotlinReleaseJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    assertKotlinAndroidTestsNoSource(firstRun)
+
+    deleteBuild(parent)
+    val secondRun = createAndroidTestRunner(parent).build()
+
+    assertThat(secondRun.task(":generateJniHeaders")?.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
+    assertThat(secondRun.task(":generateKotlinDebugJniHeaders")?.outcome).isEqualTo(TaskOutcome.FROM_CACHE)
+    assertThat(secondRun.task(":generateKotlinReleaseJniHeaders")?.outcome).isEqualTo(TaskOutcome.FROM_CACHE)
+    assertKotlinAndroidTestsNoSource(secondRun)
+
+    assertHeaders(parent, "build/generated/sources/headers/kotlin/debug")
+    assertHeaders(parent, "build/generated/sources/headers/kotlin/release")
   }
 
   @ParameterizedTest
@@ -362,6 +438,17 @@ class KtjniPluginTest {
     vararg tasks: String = arrayOf("--build-cache", "--info"),
   ): GradleRunner = GradleRunner.create()
     .withProjectDir(projectDir)
+    .withTestKitDir(File("build/gradle-test-kit").absoluteFile)
+    .withPluginClasspath()
+    .withArguments(*arrayOf("generateJniHeaders") + tasks)
+    .withDebug(true)
+
+  private fun createAndroidTestRunner(
+    projectDir: File,
+    vararg tasks: String = arrayOf("--build-cache", "--info"),
+  ): GradleRunner = GradleRunner.create()
+    .forwardOutput()
+    .withAndroidConfiguration(projectDir)
     .withPluginClasspath()
     .withArguments(*arrayOf("generateJniHeaders") + tasks)
     .withDebug(true)
@@ -375,10 +462,6 @@ class KtjniPluginTest {
 
     val headerContent = headerFile.readText()
     assertThat(headerContent).isEqualTo(expectedOutcome)
-  }
-
-  private fun deleteBuild(parent: File) {
-    File(parent, "build").deleteRecursively()
   }
 
   private companion object {

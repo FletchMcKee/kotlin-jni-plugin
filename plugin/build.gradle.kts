@@ -40,6 +40,7 @@ dependencies {
 
   // Provided by Gradle runtime or the user's own environment.
   compileOnly(libs.kotlin.gradle.plugin)
+  compileOnly(libs.android.gradle.plugin)
   compileOnly(gradleApi())
   compileOnly(localGroovy())
 
@@ -51,6 +52,7 @@ dependencies {
   testImplementation(gradleTestKit())
 
   testKitRuntimeOnly(libs.kotlin.gradle.plugin)
+  testKitRuntimeOnly(libs.android.gradle.plugin)
   testRuntimeOnly(libs.junit.platform.launcher)
 }
 
