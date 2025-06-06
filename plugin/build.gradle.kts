@@ -31,14 +31,15 @@ tasks.named<Test>("test") {
   useJUnitPlatform()
 }
 
+val testKitRuntimeOnly by configurations.registering
+
 dependencies {
   // These need to be bundled with the plugin.
   implementation(libs.asm)
   implementation(libs.asm.tree)
-  // Need to look into whether this needs to be bundled.
-  implementation(libs.kotlin.gradle.plugin)
 
-  // Provided by Gradle runtime.
+  // Provided by Gradle runtime or the user's own environment.
+  compileOnly(libs.kotlin.gradle.plugin)
   compileOnly(gradleApi())
   compileOnly(localGroovy())
 
@@ -49,7 +50,14 @@ dependencies {
   testImplementation(libs.google.truth)
   testImplementation(gradleTestKit())
 
+  testKitRuntimeOnly(libs.kotlin.gradle.plugin)
   testRuntimeOnly(libs.junit.platform.launcher)
+}
+
+// `pluginUnderTestMetadata` automatically builds a plugin classpath from implementation dependencies, but it doesn’t include transitive
+// runtime-only dependencies like Kotlin's gradle-plugin, so we set it here.
+tasks.named<PluginUnderTestMetadata>("pluginUnderTestMetadata") {
+  pluginClasspath.from(testKitRuntimeOnly)
 }
 
 gradlePlugin {
