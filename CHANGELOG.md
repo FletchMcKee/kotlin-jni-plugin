@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.0.1-beta02] - 2025-06-06
+
+Changed:
+
+- Plugin no longer bundles the Kotlin Android Gradle plugin.
+
 ## [0.0.1-beta01] - 2025-05-27
 
 Fixed:
@@ -19,7 +25,8 @@ Changed:
 
 Initial (alpha) Release
 
-[Unreleased]: https://github.com/fletchmckee/ktjni/compare/0.0.1-beta01...HEAD
+[Unreleased]: https://github.com/fletchmckee/ktjni/compare/0.0.1-beta02...HEAD
+[0.0.1-beta02]: https://github.com/fletchmckee/ktjni/releases/tag/0.0.1-beta02
 [0.0.1-beta01]: https://github.com/fletchmckee/ktjni/releases/tag/0.0.1-beta01
 [0.0.1-alpha02]: https://github.com/fletchmckee/ktjni/releases/tag/0.0.1-alpha02
 [0.0.1-alpha01]: https://github.com/fletchmckee/ktjni/releases/tag/0.0.1-alpha01
