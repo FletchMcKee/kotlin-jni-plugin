@@ -15,9 +15,11 @@ public annotation class KtjniDsl
 @KtjniDsl
 public interface KtjniExtension {
   /**
-   * Specifies a custom output directory where JNI header files will be generated.
+   * Base output directory for generated JNI headers.
    *
-   * Default: `{projectDir}/build/generated/sources/headers`.
+   * Files are placed under `{outputDir}/{sourceType}/{sourceName}` to guarantee cache correctness.
+   *
+   * Default: `{project.projectDir}/build/generated/sources/headers`
    */
   public val outputDir: DirectoryProperty
 }

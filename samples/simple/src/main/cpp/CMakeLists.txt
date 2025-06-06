@@ -12,7 +12,10 @@ cmake_minimum_required(VERSION 3.22.1)
 project("simple")
 
 # Example for setting the outputDir to our build directory.
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../../build/generated/sources/headers/kotlin/release")
+include_directories(
+        "${CMAKE_CURRENT_SOURCE_DIR}/../../../build/generated/sources/headers/kotlin/debug",
+        "${CMAKE_CURRENT_SOURCE_DIR}/../../../build/generated/sources/headers/kotlin/release"
+)
 
 # Creates and names a library, sets it as either STATIC
 # or SHARED, and provides the relative paths to its source code.

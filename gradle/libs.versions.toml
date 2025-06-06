@@ -47,6 +47,7 @@ ktlint-core = { module = "com.pinterest.ktlint:ktlint-core", version.ref = "ktli
 
 # Build logic dependencies
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+android-gradle-plugin = { module = "com.android.tools.build:gradle", version.ref = "agp" }
 spotless-gradle-plugin = { module = "com.diffplug.spotless:spotless-plugin-gradle", version.ref = "spotless" }
 ktjni-build-plugin = { module = "io.github.fletchmckee.ktjni.build:gradle-plugin" }
 ktjni-gradle-plugin = { module = "io.github.fletchmckee.ktjni:plugin" }

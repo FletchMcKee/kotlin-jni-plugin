@@ -94,20 +94,22 @@ internal abstract class GenerateJniHeaders : WorkAction<GenerateJniHeadersParams
 
     val file = File(outputDir, fileName)
     PrintWriter(file).use { out ->
-      val cName = className.toMangledJniName()
-      out.writePrologue(cName)
-      out.writeStatics(
-        classNode = classNode,
-        cName = cName,
-        srcDir = srcDir,
-      )
-      out.writeNativeMethods(
-        cName = cName,
-        classFlatName = className,
-        nativeMethods = nativeMethods,
-        overloadedMethodMap = overloadedMethodMap,
-      )
-      out.writeEpilogue()
+      with(out) {
+        val cName = className.toMangledJniName()
+        writePrologue(cName)
+        writeStatics(
+          classNode = classNode,
+          cName = cName,
+          srcDir = srcDir,
+        )
+        writeNativeMethods(
+          cName = cName,
+          classFlatName = className,
+          nativeMethods = nativeMethods,
+          overloadedMethodMap = overloadedMethodMap,
+        )
+        writeEpilogue()
+      }
     }
 
     return className
