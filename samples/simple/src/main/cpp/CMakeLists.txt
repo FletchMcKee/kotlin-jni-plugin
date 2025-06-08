@@ -14,7 +14,9 @@ project("simple")
 # Example for setting the outputDir to our build directory.
 include_directories(
         "${CMAKE_CURRENT_SOURCE_DIR}/../../../build/generated/sources/headers/kotlin/debug",
-        "${CMAKE_CURRENT_SOURCE_DIR}/../../../build/generated/sources/headers/kotlin/release"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../../../build/generated/sources/headers/kotlin/release",
+        "${CMAKE_CURRENT_SOURCE_DIR}/../../../build/generated/sources/headers/java/debug",
+        "${CMAKE_CURRENT_SOURCE_DIR}/../../../build/generated/sources/headers/java/release"
 )
 
 # Creates and names a library, sets it as either STATIC

@@ -41,7 +41,7 @@ internal fun GradleRunner.withAndroidConfiguration(projectRoot: File): GradleRun
 }
 
 @Suppress("unused") // Invoked from ParameterizedTest
-enum class KotlinAndroidVersion(val gradle: String, val agp: String, val kotlin: String, val jdk: Int) {
+enum class AndroidVersion(val gradle: String, val agp: String, val kotlin: String, val jdk: Int) {
   K1_8_J17("8.5", "8.1.4", "1.9.20", 17),
   K1_9_J17("8.9", "8.5.2", "1.9.23", 17),
   K2_0_J21("8.11", "8.7.3", "2.0.20", 21),

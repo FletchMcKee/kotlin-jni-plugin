@@ -1,7 +1,12 @@
 // Copyright 2025, Colin McKee
 // SPDX-License-Identifier: Apache-2.0
-package io.github.fletchmckee.ktjni.internal
+package io.github.fletchmckee.ktjni.tasks
 
+import io.github.fletchmckee.ktjni.internal.toMangledJniName
+import io.github.fletchmckee.ktjni.internal.writeEpilogue
+import io.github.fletchmckee.ktjni.internal.writeNativeMethods
+import io.github.fletchmckee.ktjni.internal.writePrologue
+import io.github.fletchmckee.ktjni.internal.writeStatics
 import io.github.fletchmckee.ktjni.util.isLocal
 import io.github.fletchmckee.ktjni.util.needsHeader
 import java.io.File

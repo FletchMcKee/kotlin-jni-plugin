@@ -102,3 +102,7 @@ Java_io_github_fletchmckee_ktjni_samples_simple_Extension_nativeExtension___3F_3
     return result;
 }
 
+extern "C" JNIEXPORT void JNICALL Java_io_github_fletchmckee_ktjni_samples_simple_MixedJavaExample_nativeJavaInJava
+        (JNIEnv *, jclass) {
+    // Do more nothing.
+}

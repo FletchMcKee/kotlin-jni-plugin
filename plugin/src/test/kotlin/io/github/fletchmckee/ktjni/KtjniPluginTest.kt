@@ -244,8 +244,8 @@ class KtjniPluginTest {
   }
 
   @ParameterizedTest
-  @EnumSource(KotlinAndroidVersion::class)
-  fun `plugin applies and generates headers for Kotlin Android`(kotlinAndroid: KotlinAndroidVersion) {
+  @EnumSource(AndroidVersion::class)
+  fun `plugin applies and generates headers for Kotlin Android`(kotlinAndroid: AndroidVersion) {
     val parent = testProjectDir.toFile()
 
     srcDir = File(parent, "src/main/kotlin/com/example").apply { mkdirs() }
@@ -309,6 +309,71 @@ class KtjniPluginTest {
 
     assertHeaders(parent, "build/generated/sources/headers/kotlin/debug")
     assertHeaders(parent, "build/generated/sources/headers/kotlin/release")
+  }
+
+  @ParameterizedTest
+  @EnumSource(AndroidVersion::class)
+  fun `plugin applies and generates headers for Java Android Library`(javaAndroid: AndroidVersion) {
+    val parent = testProjectDir.toFile()
+
+    srcDir = File(parent, "src/main/java/com/example").apply { mkdirs() }
+    testFile = File(srcDir, "Example.java")
+    testFile.writeText(
+      """
+      package com.example;
+
+      public class Example {
+        public native int exampleNative();
+      }
+      """.trimIndent(),
+    )
+
+    buildFile.writeText(
+      """
+      plugins {
+        id("com.android.library") version "${javaAndroid.agp}"
+        id("io.github.fletchmckee.ktjni")
+      }
+
+      android {
+        compileSdk = 34
+        defaultConfig {
+          minSdk = 21
+          namespace = "com.example"
+        }
+
+        compileOptions {
+          sourceCompatibility = JavaVersion.VERSION_${javaAndroid.jdk}
+          targetCompatibility = JavaVersion.VERSION_${javaAndroid.jdk}
+        }
+      }
+
+      // Caching for java won't work unless we specify a different output directory.
+      ktjni {
+        outputDir = layout.buildDirectory.dir("custom/ktjni/headers")
+      }
+      """.trimIndent(),
+    )
+
+    val firstRun = createAndroidTestRunner(parent).build()
+
+    assertThat(firstRun.task(":generateJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    assertThat(firstRun.task(":generateJavaDebugJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    // TODO: Needs further investigation to see why it is FROM_CACHE here instead of SUCCESS. Guessing the agp reuses the same
+    //  destinationDirectory vs the kotlin android plugin creating different ones for each variant.
+    assertThat(firstRun.task(":generateJavaReleaseJniHeaders")?.outcome).isEqualTo(TaskOutcome.FROM_CACHE)
+    // Unit test and Android test variants should exist but be NO_SOURCE since we only have main sources
+    assertJavaAndroidTestsNoSource(firstRun)
+
+    deleteBuild(parent)
+    val secondRun = createAndroidTestRunner(parent).build()
+
+    assertThat(secondRun.task(":generateJniHeaders")?.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
+    assertThat(secondRun.task(":generateJavaDebugJniHeaders")?.outcome).isEqualTo(TaskOutcome.FROM_CACHE)
+    assertThat(secondRun.task(":generateJavaReleaseJniHeaders")?.outcome).isEqualTo(TaskOutcome.FROM_CACHE)
+
+    assertHeaders(parent, "build/custom/ktjni/headers/java/debug")
+    assertHeaders(parent, "build/custom/ktjni/headers/java/release")
   }
 
   @ParameterizedTest
@@ -424,8 +489,7 @@ class KtjniPluginTest {
     }
 
     deleteBuild(parent)
-    val secondRun = createTestRunner(parent)
-      .build()
+    val secondRun = createTestRunner(parent).build()
 
     assertThat(secondRun.task(":generateJniHeaders")?.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
     assertThat(secondRun.task(":generateScalaMainJniHeaders")?.outcome).isEqualTo(TaskOutcome.FROM_CACHE)

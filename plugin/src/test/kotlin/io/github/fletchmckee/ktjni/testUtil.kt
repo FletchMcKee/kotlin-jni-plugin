@@ -18,4 +18,11 @@ internal fun assertKotlinAndroidTestsNoSource(result: BuildResult) {
   assertThat(result.task(":generateKotlinReleaseUnitTestJniHeaders")?.outcome).isEqualTo(TaskOutcome.NO_SOURCE)
 }
 
+internal fun assertJavaAndroidTestsNoSource(result: BuildResult) {
+  // There is no ReleaseAndroidTest variant.
+  assertThat(result.task(":generateJavaDebugAndroidTestJniHeaders")?.outcome).isEqualTo(TaskOutcome.NO_SOURCE)
+  assertThat(result.task(":generateJavaDebugUnitTestJniHeaders")?.outcome).isEqualTo(TaskOutcome.NO_SOURCE)
+  assertThat(result.task(":generateJavaReleaseUnitTestJniHeaders")?.outcome).isEqualTo(TaskOutcome.NO_SOURCE)
+}
+
 internal fun String.withInvariantPathSeparators() = replace("\\", "/")

@@ -2,9 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.fletchmckee.ktjni
 
+import com.android.build.api.variant.AndroidComponentsExtension
+import com.android.build.api.variant.ComponentIdentity
+import com.android.build.api.variant.HasAndroidTest
+import com.android.build.api.variant.HasUnitTest
 import io.github.fletchmckee.ktjni.internal.PluginId
 import io.github.fletchmckee.ktjni.tasks.KtjniTask
 import io.github.fletchmckee.ktjni.util.taskSuffix
+import io.github.fletchmckee.ktjni.util.titleCase
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
@@ -38,10 +43,62 @@ public class KtjniPlugin : Plugin<Project> {
     // This outputDir is optional so we set a default convention to keep parity with JavaBasePlugin's `headerOutputDirectory`.
     val headerOutputDir = extension.outputDir.convention(project.layout.buildDirectory.dir("generated/sources/headers"))
 
-    // TODO: Handle com.android.library and com.android.application
+    configureAndroid(headerOutputDir, aggregate)
     configureKotlin(headerOutputDir, aggregate)
     configureJava(headerOutputDir, aggregate)
     configureScala(headerOutputDir, aggregate)
+  }
+
+  private fun Project.configureAndroid(
+    headerOutputDir: DirectoryProperty,
+    aggregate: ConfigurableFileCollection,
+  ) {
+    plugins.withId(PluginId.AndroidApplication.id) {
+      val androidExtension = extensions.getByType(AndroidComponentsExtension::class.java)
+      androidExtension.onVariants { variant ->
+        configureAndroidVariant(variant, headerOutputDir, aggregate)
+        (variant as? HasUnitTest)?.unitTest?.let {
+          configureAndroidVariant(it, headerOutputDir, aggregate)
+        }
+        (variant as? HasAndroidTest)?.androidTest?.let {
+          configureAndroidVariant(it, headerOutputDir, aggregate)
+        }
+      }
+    }
+
+    plugins.withId(PluginId.AndroidLibrary.id) {
+      val androidExtension = extensions.getByType(AndroidComponentsExtension::class.java)
+      androidExtension.onVariants { variant ->
+        configureAndroidVariant(variant, headerOutputDir, aggregate)
+        (variant as? HasUnitTest)?.unitTest?.let {
+          configureAndroidVariant(it, headerOutputDir, aggregate)
+        }
+        (variant as? HasAndroidTest)?.androidTest?.let {
+          configureAndroidVariant(it, headerOutputDir, aggregate)
+        }
+      }
+    }
+  }
+
+  private fun Project.configureAndroidVariant(
+    variant: ComponentIdentity,
+    headerOutputDir: DirectoryProperty,
+    aggregate: ConfigurableFileCollection,
+  ) {
+    // Generally trying to avoid string matching for task types, but this is a pattern you'll see in other plugins like room-gradle-plugin
+    // See AndroidPluginIntegration.kt
+    val compileTaskName = "compile${variant.name.titleCase}JavaWithJavac"
+    tasks.withType(JavaCompile::class.java).all {
+      if (name == compileTaskName) {
+        val compileTaskProvider = tasks.named(compileTaskName, JavaCompile::class.java)
+        registerJavaHeaderTask(
+          sourceSetName = variant.name,
+          compileTaskProvider = compileTaskProvider,
+          headerOutputDir = headerOutputDir,
+          aggregate = aggregate,
+        )
+      }
+    }
   }
 
   private fun Project.configureKotlin(
@@ -135,7 +192,7 @@ public class KtjniPlugin : Plugin<Project> {
     target: String = "", // For Kotlin Multiplatform
   ) {
     val taskSuffix = compilation.name.taskSuffix(target)
-    val taskName = "generateKotlin${taskSuffix.replaceFirstChar(Char::uppercase)}JniHeaders"
+    val taskName = "generateKotlin${taskSuffix.titleCase}JniHeaders"
 
     val generateJniHeadersTask = tasks.register(taskName, KtjniTask::class.java) {
       sourceDir.set(
@@ -162,7 +219,7 @@ public class KtjniPlugin : Plugin<Project> {
     headerOutputDir: DirectoryProperty,
     aggregate: ConfigurableFileCollection,
   ) {
-    val taskName = "generateJava${sourceSetName.replaceFirstChar(Char::uppercase)}JniHeaders"
+    val taskName = "generateJava${sourceSetName.titleCase}JniHeaders"
 
     val generateJniHeadersTask = tasks.register(taskName, KtjniTask::class.java) {
       sourceDir.set(
@@ -188,7 +245,7 @@ public class KtjniPlugin : Plugin<Project> {
     headerOutputDir: DirectoryProperty,
     aggregate: ConfigurableFileCollection,
   ) {
-    val taskName = "generateScala${sourceSetName.replaceFirstChar(Char::uppercase)}JniHeaders"
+    val taskName = "generateScala${sourceSetName.titleCase}JniHeaders"
     val generateJniHeadersTask = tasks.register(taskName, KtjniTask::class.java) {
       sourceDir.set(
         compileTaskProvider.flatMap { it.destinationDirectory },
