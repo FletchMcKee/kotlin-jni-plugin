@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.0.1-beta03] - 2025-06-08
+
+Changed:
+
+- Added support for the Android Gradle plugins.
+
 ## [0.0.1-beta02] - 2025-06-06
 
 Changed:
@@ -25,7 +31,8 @@ Changed:
 
 Initial (alpha) Release
 
-[Unreleased]: https://github.com/fletchmckee/ktjni/compare/0.0.1-beta02...HEAD
+[Unreleased]: https://github.com/fletchmckee/ktjni/compare/0.0.1-beta03...HEAD
+[0.0.1-beta03]: https://github.com/fletchmckee/ktjni/releases/tag/0.0.1-beta03
 [0.0.1-beta02]: https://github.com/fletchmckee/ktjni/releases/tag/0.0.1-beta02
 [0.0.1-beta01]: https://github.com/fletchmckee/ktjni/releases/tag/0.0.1-beta01
 [0.0.1-alpha02]: https://github.com/fletchmckee/ktjni/releases/tag/0.0.1-alpha02

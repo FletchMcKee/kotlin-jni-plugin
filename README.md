@@ -41,7 +41,7 @@ pluginManagement {
 
 ```gradle
 plugins {
-  id("io.github.fletchmckee.ktjni") version "0.0.1-beta01"
+  id("io.github.fletchmckee.ktjni") version "0.0.1-beta03"
 }
 ```
 
@@ -123,5 +123,5 @@ class Crypto {
 - [x] **Kotlin Android** (`org.jetbrains.kotlin.android`)
 - [x] **Java** (via `java` or `java-library` plugins)
 - [x] **Scala** (`scala` plugin)
-- [ ] **Android build variants** (`com.android.library` or `com.android.application`) 
+- [ ] **Android build variants** (`com.android.library` or `com.android.application`)
   - Currently supports Kotlin compilation in Android projects. Java compilation support for Android build variants is planned for a future release.
