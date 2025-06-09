@@ -7,7 +7,8 @@ internal enum class PluginId(internal val id: String) {
   KotlinJvm("org.jetbrains.kotlin.jvm"),
   KotlinMultiplatform("org.jetbrains.kotlin.multiplatform"),
 
-  AndroidBase("com.android.base"),
   AndroidApplication("com.android.application"),
   AndroidLibrary("com.android.library"),
+
+  Scala("scala"),
 }

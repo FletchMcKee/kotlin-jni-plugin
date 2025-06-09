@@ -63,7 +63,7 @@ internal abstract class GenerateJniHeaders : WorkAction<GenerateJniHeadersParams
       reader.accept(node, 0)
       node
     }
-    logger.info("Processing class: ${classNode.name}")
+    logger.info("Ktjni - processing class: ${classNode.name}")
     // JNI does not include native methods in local classes.
     if (classNode.isLocal) return null
 
@@ -93,7 +93,7 @@ internal abstract class GenerateJniHeaders : WorkAction<GenerateJniHeadersParams
   ): String? {
     val className = classNode.name.replace('/', '.')
     val fileName = className.replace(Regex("[.$]"), "_") + ".h"
-    logger.info("Class {$className} contains native methods. Creating file $fileName")
+    logger.info("Ktjni - class {$className} contains native methods. Creating file $fileName")
     // Necessary since we delete the outputDir recursively at the start of execution.
     outputDir.mkdirs()
 

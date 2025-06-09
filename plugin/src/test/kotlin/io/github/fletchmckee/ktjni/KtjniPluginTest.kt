@@ -3,8 +3,24 @@
 package io.github.fletchmckee.ktjni
 
 import com.google.common.truth.Truth.assertThat
+import io.github.fletchmckee.ktjni.util.AndroidVersion
+import io.github.fletchmckee.ktjni.util.assertConfigurationCacheReused
+import io.github.fletchmckee.ktjni.util.assertJavaAndroidTestsNoSource
+import io.github.fletchmckee.ktjni.util.assertKotlinAndroidTestsNoSource
+import io.github.fletchmckee.ktjni.util.assertNotIn
+import io.github.fletchmckee.ktjni.util.withAndroidConfiguration
+import io.github.fletchmckee.ktjni.util.withCommonConfiguration
+import io.github.fletchmckee.ktjni.util.writeCommonSettingsFile
+import io.github.fletchmckee.ktjni.util.writeJavaAndroidLibraryBuildFile
+import io.github.fletchmckee.ktjni.util.writeJavaBuildFile
+import io.github.fletchmckee.ktjni.util.writeJavaExampleFile
+import io.github.fletchmckee.ktjni.util.writeKmpBuildFile
+import io.github.fletchmckee.ktjni.util.writeKotlinAndroidLibraryBuildFile
+import io.github.fletchmckee.ktjni.util.writeKotlinExampleFile
+import io.github.fletchmckee.ktjni.util.writeKotlinJvmBuildFile
+import io.github.fletchmckee.ktjni.util.writeScalaBuildFile
+import io.github.fletchmckee.ktjni.util.writeScalaExampleFile
 import java.io.File
-import java.nio.file.Path
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.jupiter.api.BeforeEach
@@ -13,7 +29,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 
 class KtjniPluginTest {
-  @TempDir lateinit var testProjectDir: Path
+  @TempDir lateinit var projectRoot: File
 
   private lateinit var buildFile: File
   private lateinit var settingsFile: File
@@ -21,501 +37,218 @@ class KtjniPluginTest {
   private lateinit var testFile: File
 
   @BeforeEach fun setup() {
-    val projectDir = testProjectDir.toFile()
-    val localCacheDir = File(projectDir, "local-cache")
-    buildFile = File(projectDir, "build.gradle.kts")
-    settingsFile = File(projectDir, "settings.gradle.kts")
+    val localCacheDir = File(projectRoot, "local-cache")
+    buildFile = File(projectRoot, "build.gradle.kts")
+    settingsFile = File(projectRoot, "settings.gradle.kts")
 
-    settingsFile.writeText(
-      """
-      rootProject.name = "test-project"
-
-      dependencyResolutionManagement {
-        repositories {
-          mavenLocal()
-          mavenCentral()
-          google()
-        }
-      }
-
-      buildCache {
-        local {
-          directory = file("${localCacheDir.toURI()}")
-        }
-      }
-      """.trimIndent(),
-    )
+    settingsFile.writeCommonSettingsFile(localCacheDir)
   }
 
   @ParameterizedTest
   @EnumSource(KotlinJdkVersion::class)
   fun `plugin applies and generates headers for Kotlin Multiplatform Kotlin classes`(kotlinJdkVersion: KotlinJdkVersion) {
-    val parent = testProjectDir.toFile()
-    srcDir = File(parent, "src/jvmMain/kotlin/com/example").apply { mkdirs() }
+    srcDir = File(projectRoot, "src/jvmMain/kotlin/com/example").apply { mkdirs() }
     testFile = File(srcDir, "Example.kt")
-    testFile.writeText(
-      """
-      package com.example
+    testFile.writeKotlinExampleFile()
+    buildFile.writeKmpBuildFile(kotlinJdkVersion)
 
-      class Example {
-        external fun exampleNative(): Int
-      }
-      """.trimIndent(),
-    )
-
-    buildFile.writeText(
-      """
-      import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-      import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
-      plugins {
-        kotlin("multiplatform") version "${kotlinJdkVersion.kotlin}"
-        id("io.github.fletchmckee.ktjni")
-      }
-
-      repositories {
-        mavenCentral()
-      }
-
-      kotlin {
-        jvm {
-          compilations.all {
-            kotlinOptions {
-              jvmTarget = "${kotlinJdkVersion.jdk}"
-            }
-          }
-
-          java {
-            sourceCompatibility = JavaVersion.VERSION_${kotlinJdkVersion.jdk}
-            targetCompatibility = JavaVersion.VERSION_${kotlinJdkVersion.jdk}
-          }
-        }
-      }
-      """.trimIndent(),
-    )
-
-    val firstRun = createTestRunner(parent).build()
+    val firstRun = createTestRunner(projectRoot).build()
 
     assertThat(firstRun.task(":generateJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     assertThat(firstRun.task(":generateKotlinJvmMainJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     // The Java task should run but have NO-SOURCE as its result.
     assertThat(firstRun.task(":generateJavaJvmMainJniHeaders")?.outcome).isEqualTo(TaskOutcome.NO_SOURCE)
 
-    // Delete outputs to simulate a clean build with cache enabled.
-    deleteBuild(parent)
-    val secondRun = createTestRunner(parent).build()
+    val secondRun = createTestRunner(projectRoot).build()
     // Verify tasks are restored from cache.
     assertThat(secondRun.task(":generateJniHeaders")?.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
-    assertThat(secondRun.task(":generateKotlinJvmMainJniHeaders")?.outcome).isEqualTo(TaskOutcome.FROM_CACHE)
-    assertHeaders(parent, "build/generated/sources/headers/kotlin/jvmMain")
+    assertThat(secondRun.task(":generateKotlinJvmMainJniHeaders")?.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
+
+    secondRun.assertConfigurationCacheReused()
+    assertHeaders(projectRoot, "build/generated/ktjni/kotlin/jvmMain")
   }
 
   @ParameterizedTest
   @EnumSource(KotlinJdkVersion::class)
   fun `plugin applies and generates headers for Kotlin Multiplatform Java classes`(kotlinJdkVersion: KotlinJdkVersion) {
-    val parent = testProjectDir.toFile()
-    srcDir = File(parent, "src/jvmMain/java/com/example").apply { mkdirs() }
+    srcDir = File(projectRoot, "src/jvmMain/java/com/example").apply { mkdirs() }
     testFile = File(srcDir, "Example.java")
-    testFile.writeText(
-      """
-      package com.example;
+    testFile.writeJavaExampleFile()
+    buildFile.writeKmpBuildFile(kotlinJdkVersion)
 
-      public class Example {
-        public native int exampleNative();
-      }
-      """.trimIndent(),
-    )
-
-    buildFile.writeText(
-      """
-      import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-      import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
-      plugins {
-        kotlin("multiplatform") version "${kotlinJdkVersion.kotlin}"
-        id("io.github.fletchmckee.ktjni")
-      }
-
-      repositories {
-        mavenCentral()
-      }
-
-      kotlin {
-        jvm {
-          compilations.all {
-            kotlinOptions {
-              jvmTarget = "${kotlinJdkVersion.jdk}"
-            }
-          }
-
-          java {
-            sourceCompatibility = JavaVersion.VERSION_${kotlinJdkVersion.jdk}
-            targetCompatibility = JavaVersion.VERSION_${kotlinJdkVersion.jdk}
-          }
-        }
-      }
-
-      // Caching for java won't work unless we specify a different output directory.
-      ktjni {
-        outputDir = layout.buildDirectory.dir("custom/jni/headers")
-      }
-      """.trimIndent(),
-    )
-
-    val firstRun = createTestRunner(parent).build()
+    val firstRun = createTestRunner(projectRoot).build()
 
     assertThat(firstRun.task(":generateJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     assertThat(firstRun.task(":generateJavaJvmMainJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     // The Kotlin task should run but have NO-SOURCE as its result.
     assertThat(firstRun.task(":generateKotlinJvmMainJniHeaders")?.outcome).isEqualTo(TaskOutcome.NO_SOURCE)
 
-    // Delete outputs to simulate a clean build with cache enabled.
-    deleteBuild(parent)
-    val secondRun = createTestRunner(parent).build()
+    val secondRun = createTestRunner(projectRoot).build()
     // Verify tasks are restored from cache.
     assertThat(secondRun.task(":generateJniHeaders")?.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
-    assertThat(secondRun.task(":generateJavaJvmMainJniHeaders")?.outcome).isEqualTo(TaskOutcome.FROM_CACHE)
-    assertHeaders(parent, "build/custom/jni/headers/java/jvmMain")
+    assertThat(secondRun.task(":generateJavaJvmMainJniHeaders")?.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
+
+    secondRun.assertConfigurationCacheReused()
+    assertHeaders(projectRoot, "build/generated/ktjni/java/jvmMain")
   }
 
   @ParameterizedTest
   @EnumSource(KotlinJdkVersion::class)
   fun `plugin applies and generates headers for Kotlin JVM`(kotlinJdkVersion: KotlinJdkVersion) {
-    val parent = testProjectDir.toFile()
-    srcDir = File(parent, "src/main/kotlin/com/example").apply { mkdirs() }
+    srcDir = File(projectRoot, "src/main/kotlin/com/example").apply { mkdirs() }
     testFile = File(srcDir, "Example.kt")
-    testFile.writeText(
-      """
-      package com.example
+    testFile.writeKotlinExampleFile()
+    buildFile.writeKotlinJvmBuildFile(kotlinJdkVersion)
 
-      class Example {
-        external fun exampleNative(): Int
-      }
-      """.trimIndent(),
-    )
-
-    buildFile.writeText(
-      """
-      import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-      import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
-      plugins {
-        kotlin("jvm") version "${kotlinJdkVersion.kotlin}"
-        id("io.github.fletchmckee.ktjni")
-      }
-
-      repositories {
-        mavenCentral()
-      }
-
-      java {
-        sourceCompatibility = JavaVersion.VERSION_${kotlinJdkVersion.jdk}
-        targetCompatibility = JavaVersion.VERSION_${kotlinJdkVersion.jdk}
-      }
-
-      tasks.withType<KotlinCompile> {
-        compilerOptions {
-          jvmTarget.set(JvmTarget.valueOf("JVM_${kotlinJdkVersion.jdk}"))
-        }
-      }
-      """.trimIndent(),
-    )
-
-    val firstRun = createTestRunner(parent).build()
+    val firstRun = createTestRunner(projectRoot).build()
 
     assertThat(firstRun.task(":generateJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     assertThat(firstRun.task(":generateKotlinMainJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     // The Kotlin plugin creates a compileJava task for compatibility, so :generateJniHeadersCompileJava exists but is a no-op.
     assertThat(firstRun.task(":generateJavaMainJniHeaders")?.outcome).isEqualTo(TaskOutcome.NO_SOURCE)
     // Verify that no Java/Scala/Groovy tasks were executed
-    assertThat(firstRun.tasks.map { it.path }).apply {
-      doesNotContain(":generateScalaMainJniHeaders")
-      doesNotContain(":generateGroovyMainJniHeaders")
-    }
+    firstRun.assertNotIn(
+      ":generateScalaMainJniHeaders",
+      ":generateGroovyMainJniHeaders",
+    )
 
-    // Delete outputs to simulate a clean build with cache enabled.
-    deleteBuild(parent)
-    val secondRun = createTestRunner(parent).build()
+    val secondRun = createTestRunner(projectRoot).build()
     // Verify tasks are restored from cache.
     assertThat(secondRun.task(":generateJniHeaders")?.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
-    assertThat(secondRun.task(":generateKotlinMainJniHeaders")?.outcome).isEqualTo(TaskOutcome.FROM_CACHE)
+    assertThat(secondRun.task(":generateKotlinMainJniHeaders")?.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
 
-    assertHeaders(parent, "build/generated/sources/headers/kotlin/main")
+    secondRun.assertConfigurationCacheReused()
+    assertHeaders(projectRoot, "build/generated/ktjni/kotlin/main")
   }
 
   @ParameterizedTest
   @EnumSource(AndroidVersion::class)
   fun `plugin applies and generates headers for Kotlin Android`(kotlinAndroid: AndroidVersion) {
-    val parent = testProjectDir.toFile()
-
-    srcDir = File(parent, "src/main/kotlin/com/example").apply { mkdirs() }
+    srcDir = File(projectRoot, "src/main/kotlin/com/example").apply { mkdirs() }
     testFile = File(srcDir, "Example.kt")
-    testFile.writeText(
-      """
-      package com.example
+    testFile.writeKotlinExampleFile()
+    buildFile.writeKotlinAndroidLibraryBuildFile(kotlinAndroid)
 
-      class Example {
-        external fun exampleNative(): Int
-      }
-      """.trimIndent(),
-    )
-
-    buildFile.writeText(
-      """
-      import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-      import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
-      plugins {
-        id("com.android.library") version "${kotlinAndroid.agp}"
-        kotlin("android") version "${kotlinAndroid.kotlin}"
-        id("io.github.fletchmckee.ktjni")
-      }
-
-      android {
-        compileSdk = 34
-        defaultConfig {
-          minSdk = 21
-          namespace = "com.example"
-        }
-
-        compileOptions {
-          sourceCompatibility = JavaVersion.VERSION_${kotlinAndroid.jdk}
-          targetCompatibility = JavaVersion.VERSION_${kotlinAndroid.jdk}
-        }
-      }
-
-      tasks.withType<KotlinCompile>().configureEach {
-        compilerOptions {
-          jvmTarget.set(JvmTarget.valueOf("JVM_${kotlinAndroid.jdk}"))
-        }
-      }
-      """.trimIndent(),
-    )
-
-    val firstRun = createAndroidTestRunner(parent).build()
+    val firstRun = createAndroidTestRunner(projectRoot).build()
 
     assertThat(firstRun.task(":generateJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     assertThat(firstRun.task(":generateKotlinDebugJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     assertThat(firstRun.task(":generateKotlinReleaseJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     assertKotlinAndroidTestsNoSource(firstRun)
 
-    deleteBuild(parent)
-    val secondRun = createAndroidTestRunner(parent).build()
-
+    val secondRun = createAndroidTestRunner(projectRoot).build()
+    // Verify tasks are restored from cache.
     assertThat(secondRun.task(":generateJniHeaders")?.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
-    assertThat(secondRun.task(":generateKotlinDebugJniHeaders")?.outcome).isEqualTo(TaskOutcome.FROM_CACHE)
-    assertThat(secondRun.task(":generateKotlinReleaseJniHeaders")?.outcome).isEqualTo(TaskOutcome.FROM_CACHE)
+    assertThat(secondRun.task(":generateKotlinDebugJniHeaders")?.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
+    assertThat(secondRun.task(":generateKotlinReleaseJniHeaders")?.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
     assertKotlinAndroidTestsNoSource(secondRun)
 
-    assertHeaders(parent, "build/generated/sources/headers/kotlin/debug")
-    assertHeaders(parent, "build/generated/sources/headers/kotlin/release")
+    secondRun.assertConfigurationCacheReused()
+    assertHeaders(projectRoot, "build/generated/ktjni/kotlin/debug")
+    assertHeaders(projectRoot, "build/generated/ktjni/kotlin/release")
   }
 
   @ParameterizedTest
   @EnumSource(AndroidVersion::class)
   fun `plugin applies and generates headers for Java Android Library`(javaAndroid: AndroidVersion) {
-    val parent = testProjectDir.toFile()
-
-    srcDir = File(parent, "src/main/java/com/example").apply { mkdirs() }
+    srcDir = File(projectRoot, "src/main/java/com/example").apply { mkdirs() }
     testFile = File(srcDir, "Example.java")
-    testFile.writeText(
-      """
-      package com.example;
+    testFile.writeJavaExampleFile()
+    buildFile.writeJavaAndroidLibraryBuildFile(javaAndroid)
 
-      public class Example {
-        public native int exampleNative();
-      }
-      """.trimIndent(),
-    )
-
-    buildFile.writeText(
-      """
-      plugins {
-        id("com.android.library") version "${javaAndroid.agp}"
-        id("io.github.fletchmckee.ktjni")
-      }
-
-      android {
-        compileSdk = 34
-        defaultConfig {
-          minSdk = 21
-          namespace = "com.example"
-        }
-
-        compileOptions {
-          sourceCompatibility = JavaVersion.VERSION_${javaAndroid.jdk}
-          targetCompatibility = JavaVersion.VERSION_${javaAndroid.jdk}
-        }
-      }
-
-      // Caching for java won't work unless we specify a different output directory.
-      ktjni {
-        outputDir = layout.buildDirectory.dir("custom/ktjni/headers")
-      }
-      """.trimIndent(),
-    )
-
-    val firstRun = createAndroidTestRunner(parent).build()
+    val firstRun = createAndroidTestRunner(projectRoot).build()
 
     assertThat(firstRun.task(":generateJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     assertThat(firstRun.task(":generateJavaDebugJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
-    // TODO: Needs further investigation to see why it is FROM_CACHE here instead of SUCCESS. Guessing the agp reuses the same
-    //  destinationDirectory vs the kotlin android plugin creating different ones for each variant.
-    assertThat(firstRun.task(":generateJavaReleaseJniHeaders")?.outcome).isEqualTo(TaskOutcome.FROM_CACHE)
+    assertThat(firstRun.task(":generateJavaReleaseJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     // Unit test and Android test variants should exist but be NO_SOURCE since we only have main sources
     assertJavaAndroidTestsNoSource(firstRun)
 
-    deleteBuild(parent)
-    val secondRun = createAndroidTestRunner(parent).build()
-
+    val secondRun = createAndroidTestRunner(projectRoot).build()
+    // Verify tasks are restored from cache.
     assertThat(secondRun.task(":generateJniHeaders")?.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
-    assertThat(secondRun.task(":generateJavaDebugJniHeaders")?.outcome).isEqualTo(TaskOutcome.FROM_CACHE)
-    assertThat(secondRun.task(":generateJavaReleaseJniHeaders")?.outcome).isEqualTo(TaskOutcome.FROM_CACHE)
+    assertThat(secondRun.task(":generateJavaDebugJniHeaders")?.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
+    assertThat(secondRun.task(":generateJavaReleaseJniHeaders")?.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
 
-    assertHeaders(parent, "build/custom/ktjni/headers/java/debug")
-    assertHeaders(parent, "build/custom/ktjni/headers/java/release")
+    secondRun.assertConfigurationCacheReused()
+    assertHeaders(projectRoot, "build/generated/ktjni/java/debug")
+    assertHeaders(projectRoot, "build/generated/ktjni/java/release")
   }
 
   @ParameterizedTest
   @EnumSource(JavaGradleVersion::class)
   fun `plugin applies and generates headers for Java`(javaGradleVersion: JavaGradleVersion) {
-    val parent = testProjectDir.toFile()
-    srcDir = File(parent, "src/main/java/com/example").apply { mkdirs() }
+    srcDir = File(projectRoot, "src/main/java/com/example").apply { mkdirs() }
     testFile = File(srcDir, "Example.java")
-    testFile.writeText(
-      """
-      package com.example;
+    testFile.writeJavaExampleFile()
+    buildFile.writeJavaBuildFile(javaGradleVersion)
 
-      public class Example {
-        public native int exampleNative();
-      }
-      """.trimIndent(),
-    )
-
-    buildFile.writeText(
-      """
-      plugins {
-        java
-        id("io.github.fletchmckee.ktjni")
-      }
-
-      repositories {
-        mavenCentral()
-      }
-
-      java {
-        sourceCompatibility = JavaVersion.VERSION_${javaGradleVersion.jdk}
-        targetCompatibility = JavaVersion.VERSION_${javaGradleVersion.jdk}
-      }
-
-      // Caching for java won't work unless we specify a different output directory.
-      ktjni {
-        outputDir = layout.buildDirectory.dir("custom/jni/headers")
-      }
-      """.trimIndent(),
-    )
-
-    val firstRun = createTestRunner(parent).build()
+    val firstRun = createTestRunner(projectRoot).build()
 
     assertThat(firstRun.task(":generateJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     assertThat(firstRun.task(":generateJavaMainJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     // Verify that no Kotlin/Scala/Groovy tasks were executed
-    assertThat(firstRun.tasks.map { it.path }).apply {
-      doesNotContain(":generateKotlinMainJniHeaders")
-      doesNotContain(":generateScalaMainJniHeaders")
-      doesNotContain(":generateGroovyMainJniHeaders")
-    }
+    firstRun.assertNotIn(
+      ":generateKotlinMainJniHeaders",
+      ":generateScalaMainJniHeaders",
+      ":generateGroovyMainJniHeaders",
+    )
 
-    // Delete outputs to simulate a clean build with cache enabled.
-    deleteBuild(parent)
-    val secondRun = createTestRunner(parent).build()
+    val secondRun = createTestRunner(projectRoot).build()
     // Verify tasks are restored from cache.
     assertThat(secondRun.task(":generateJniHeaders")?.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
-    assertThat(secondRun.task(":generateJavaMainJniHeaders")?.outcome).isEqualTo(TaskOutcome.FROM_CACHE)
+    assertThat(secondRun.task(":generateJavaMainJniHeaders")?.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
 
-    assertHeaders(parent, "build/custom/jni/headers/java/main")
+    secondRun.assertConfigurationCacheReused()
+    assertHeaders(projectRoot, "build/generated/ktjni/java/main")
   }
 
   @ParameterizedTest
   @EnumSource(ScalaGradleVersion::class)
   fun `plugin applies and generates headers for Scala`(scalaGradleVersion: ScalaGradleVersion) {
-    val parent = testProjectDir.toFile()
-    srcDir = File(parent, "src/main/scala/com/example").apply { mkdirs() }
+    srcDir = File(projectRoot, "src/main/scala/com/example").apply { mkdirs() }
     testFile = File(srcDir, "Example.scala")
-    testFile.writeText(
-      """
-      package com.example
+    testFile.writeScalaExampleFile()
+    buildFile.writeScalaBuildFile(scalaGradleVersion)
 
-      class Example {
-        @native
-        def exampleNative(): Int
-      }
-      """.trimIndent(),
-    )
-
-    buildFile.writeText(
-      """
-      plugins {
-        scala
-        id("io.github.fletchmckee.ktjni")
-      }
-
-      repositories {
-        mavenCentral()
-      }
-
-      dependencies {
-        implementation("${scalaGradleVersion.scala}")
-      }
-
-      java {
-        sourceCompatibility = JavaVersion.VERSION_${scalaGradleVersion.jdk}
-        targetCompatibility = JavaVersion.VERSION_${scalaGradleVersion.jdk}
-      }
-      """.trimIndent(),
-    )
-
-    val firstRun = createTestRunner(parent)
-      .build()
+    val firstRun = createTestRunner(projectRoot).build()
 
     assertThat(firstRun.task(":generateJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     assertThat(firstRun.task(":generateScalaMainJniHeaders")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
-    // The Scala plugin creates a compileJava task for compatibility, so :generateJniHeadersCompileJava exists but is a no-op.
-    // assertThat(result.task(":generateJniHeaders")?.outcome).isEqualTo(TaskOutcome.NO_SOURCE)
+    // The Scala plugin creates a compileJava task for compatibility, so :generateJavaMainJniHeaders exists but is a no-op.
+    assertThat(firstRun.task(":generateJavaMainJniHeaders")?.outcome).isEqualTo(TaskOutcome.NO_SOURCE)
     // Verify that no Kotlin/Groovy tasks were executed
-    assertThat(firstRun.tasks.map { it.path }).apply {
-      doesNotContain(":generateKotlinMainJniHeaders")
-      doesNotContain(":generateGroovyMainJniHeaders")
-    }
+    firstRun.assertNotIn(
+      ":generateKotlinMainJniHeaders",
+      ":generateGroovyMainJniHeaders",
+    )
 
-    deleteBuild(parent)
-    val secondRun = createTestRunner(parent).build()
-
+    val secondRun = createTestRunner(projectRoot).build()
+    // Verify tasks are restored from cache.
     assertThat(secondRun.task(":generateJniHeaders")?.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
-    assertThat(secondRun.task(":generateScalaMainJniHeaders")?.outcome).isEqualTo(TaskOutcome.FROM_CACHE)
+    assertThat(secondRun.task(":generateScalaMainJniHeaders")?.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
 
-    assertHeaders(parent, "build/generated/sources/headers/scala/main")
+    secondRun.assertConfigurationCacheReused()
+    assertHeaders(projectRoot, "build/generated/ktjni/scala/main")
   }
 
   private fun createTestRunner(
     projectDir: File,
-    vararg tasks: String = arrayOf("--build-cache", "--info"),
+    vararg tasks: String = arrayOf("--configuration-cache", "--info"),
   ): GradleRunner = GradleRunner.create()
-    .withProjectDir(projectDir)
-    .withTestKitDir(File("build/gradle-test-kit").absoluteFile)
+    .forwardOutput()
+    .withCommonConfiguration(projectDir)
     .withPluginClasspath()
     .withArguments(*arrayOf("generateJniHeaders") + tasks)
-    .withDebug(true)
 
   private fun createAndroidTestRunner(
     projectDir: File,
-    vararg tasks: String = arrayOf("--build-cache", "--info"),
+    vararg tasks: String = arrayOf("--configuration-cache", "--info"),
   ): GradleRunner = GradleRunner.create()
     .forwardOutput()
     .withAndroidConfiguration(projectDir)
     .withPluginClasspath()
     .withArguments(*arrayOf("generateJniHeaders") + tasks)
-    .withDebug(true)
 
   private fun assertHeaders(parent: File, path: String) {
     val headerDir = File(parent, path)

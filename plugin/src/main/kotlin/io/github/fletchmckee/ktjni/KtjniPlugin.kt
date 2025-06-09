@@ -40,8 +40,8 @@ public class KtjniPlugin : Plugin<Project> {
       inputs.files(aggregate)
     }
 
-    // This outputDir is optional so we set a default convention to keep parity with JavaBasePlugin's `headerOutputDirectory`.
-    val headerOutputDir = extension.outputDir.convention(project.layout.buildDirectory.dir("generated/sources/headers"))
+    // This outputDir is optional so we set a default convention.
+    val headerOutputDir = extension.outputDir.convention(project.layout.buildDirectory.dir("generated/ktjni"))
 
     configureAndroid(headerOutputDir, aggregate)
     configureKotlin(headerOutputDir, aggregate)
@@ -170,7 +170,7 @@ public class KtjniPlugin : Plugin<Project> {
     headerOutputDir: DirectoryProperty,
     aggregate: ConfigurableFileCollection,
   ) {
-    plugins.withId("scala") {
+    plugins.withId(PluginId.Scala.id) {
       // The scala plugin also applies the java plugin.
       val sourceSets = extensions.getByName("sourceSets") as SourceSetContainer
       sourceSets.all {
@@ -206,7 +206,7 @@ public class KtjniPlugin : Plugin<Project> {
       description = "Generates Kotlin JNI headers from class files for ${compilation.name} compilation"
 
       doFirst {
-        logger.info("Running Kotlin $taskName with sourceDir: ${sourceDir.get().asFile.absolutePath}")
+        logger.info("Ktjni - running $taskName")
       }
     }
 
@@ -232,7 +232,7 @@ public class KtjniPlugin : Plugin<Project> {
       description = "Generates Java JNI headers from class files for $sourceSetName compilation."
 
       doFirst {
-        logger.info("Running $taskName with sourceDir: ${sourceDir.get().asFile.absolutePath}")
+        logger.info("Ktjni - running $taskName")
       }
     }
 
@@ -257,7 +257,7 @@ public class KtjniPlugin : Plugin<Project> {
       description = "Generates Scala JNI headers from class files for $sourceSetName compilation."
 
       doFirst {
-        logger.info("Running $taskName with sourceDir: ${sourceDir.get().asFile.absolutePath}")
+        logger.info("Ktjni - running $taskName")
       }
     }
 

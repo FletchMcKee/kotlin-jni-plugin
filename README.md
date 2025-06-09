@@ -10,11 +10,11 @@ Manually writing JNI headers is tedious, error-prone, and a common source of run
 Since all JVM languages compile native method declarations to the same core bytecode structure, Ktjni works consistently across Kotlin, Java, and Scala codebases, regardless of compiler-specific attributes or metadata differences.
 
 > [!NOTE]
-> **Beta limitations:** Header generation currently requires manual execution and does not yet automatically integrate with the build process.
+> Header generation currently requires manual execution and does not automatically integrate with the build process.
 >
 > Currently the headers are generated in the project's build directory at the following path:
 > ```
-> {project.projectDir}/build/generated/sources/headers/{sourceType}/{sourceSet}
+> {project.projectDir}/build/generated/ktjni/{sourceType}/{sourceSet}
 > ```
 >
 > **CI/CD Usage:** You can add header generation as a build step in your pipelines:
@@ -25,14 +25,13 @@ Since all JVM languages compile native method declarations to the same core byte
 
 ## Getting started
 
-**1. Add Maven Central to your pluginManagment repositories**
+**1. Add Maven Central to your pluginManagement repositories**
 
 ```gradle
 pluginManagement {
   repositories {
-    // Currently this plugin is only published to `mavenCentral()`
-    mavenCentral()
-    gradlePluginPortal()
+    mavenCentral() // Release versions
+    maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots") } // SNAPSHOT Versions
   }
 }
 ```
@@ -45,11 +44,20 @@ plugins {
 }
 ```
 
-**3. Run the following command to generate JNI headers for any files containing external native methods**
+**3. Run the following aggregate command to generate JNI headers for any files containing external native methods for all variants**
 
 ```console
 ./gradlew generateJniHeaders
 ```
+
+> [!NOTE]
+> The above command is an aggregate task, so it will run for all variants. Because header generation depends on `.class` files, this will
+> also execute all of the relevant compilation tasks. For a more fine-grained approach, you can discover the relevant Ktjni commands by
+> running the following:
+> ```console
+> ./gradlew tasks --group "ktjni"
+> ```
+> And then you can run the relevant tasks based on the above output.
 
 ## Example
 
@@ -63,6 +71,31 @@ class Crypto {
   external fun sha256(input: ByteArray): ByteArray
 }
 ```
+
+<details>
+<summary>Examples in Java and Scala that would produce the same header output</summary>
+<p>
+
+#### Java
+```java
+package com.example;
+
+public class Crypto {
+  public native byte[] sha256(byte[] input);
+}
+```
+
+#### Scala
+```scala
+package com.example
+
+class Crypto {
+  @native
+  def sha256(input: Array[Byte]): Array[Byte]
+}
+```
+</p>
+</details>
 
 #### JNI Header:
 ```c
@@ -91,31 +124,6 @@ JNIEXPORT jbyteArray JNICALL Java_com_example_Crypto_sha256
 
 ```
 
-<details>
-<summary>Examples in Java and Scala that would produce the same header output</summary>
-<p>
-
-#### Java
-```java
-package com.example;
-
-public class Crypto {
-  public native byte[] sha256(byte[] input);
-}
-```
-
-#### Scala
-```scala
-package com.example
-
-class Crypto {
-  @native
-  def sha256(input: Array[Byte]): Array[Byte]
-}
-```
-</p>
-</details>
-
 ## Supported Plugins
 
 - [x] **Kotlin JVM** (`org.jetbrains.kotlin.jvm`)
@@ -123,5 +131,4 @@ class Crypto {
 - [x] **Kotlin Android** (`org.jetbrains.kotlin.android`)
 - [x] **Java** (via `java` or `java-library` plugins)
 - [x] **Scala** (`scala` plugin)
-- [ ] **Android build variants** (`com.android.library` or `com.android.application`)
-  - Currently supports Kotlin compilation in Android projects. Java compilation support for Android build variants is planned for a future release.
+- [x] **Android build variants** (`com.android.library` or `com.android.application`)

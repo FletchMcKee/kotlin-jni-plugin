@@ -1,6 +1,6 @@
 // Copyright 2025, Colin McKee
 // SPDX-License-Identifier: Apache-2.0
-package io.github.fletchmckee.ktjni
+package io.github.fletchmckee.ktjni.util
 
 import java.io.File
 import java.util.Properties
@@ -39,6 +39,62 @@ internal fun GradleRunner.withAndroidConfiguration(projectRoot: File): GradleRun
   return withProjectDir(projectRoot)
     .withTestKitDir(File("build/gradle-test-kit").absoluteFile)
 }
+
+internal fun File.writeKotlinAndroidLibraryBuildFile(kotlinAndroid: AndroidVersion) = writeText(
+  """
+  import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+  import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+  plugins {
+    id("com.android.library") version "${kotlinAndroid.agp}"
+    kotlin("android") version "${kotlinAndroid.kotlin}"
+    id("io.github.fletchmckee.ktjni")
+  }
+
+  android {
+    compileSdk = 34
+    defaultConfig {
+      minSdk = 21
+      namespace = "com.example"
+    }
+
+    compileOptions {
+      sourceCompatibility = JavaVersion.VERSION_${kotlinAndroid.jdk}
+      targetCompatibility = JavaVersion.VERSION_${kotlinAndroid.jdk}
+    }
+  }
+
+  tasks.withType<KotlinCompile>().configureEach {
+    compilerOptions {
+      jvmTarget.set(JvmTarget.valueOf("JVM_${kotlinAndroid.jdk}"))
+    }
+  }
+
+  """.trimIndent(),
+)
+
+internal fun File.writeJavaAndroidLibraryBuildFile(javaAndroid: AndroidVersion) = writeText(
+  """
+  plugins {
+    id("com.android.library") version "${javaAndroid.agp}"
+    id("io.github.fletchmckee.ktjni")
+  }
+
+  android {
+    compileSdk = 34
+    defaultConfig {
+      minSdk = 21
+      namespace = "com.example"
+    }
+
+    compileOptions {
+      sourceCompatibility = JavaVersion.VERSION_${javaAndroid.jdk}
+      targetCompatibility = JavaVersion.VERSION_${javaAndroid.jdk}
+    }
+  }
+
+  """.trimIndent(),
+)
 
 @Suppress("unused") // Invoked from ParameterizedTest
 enum class AndroidVersion(val gradle: String, val agp: String, val kotlin: String, val jdk: Int) {
