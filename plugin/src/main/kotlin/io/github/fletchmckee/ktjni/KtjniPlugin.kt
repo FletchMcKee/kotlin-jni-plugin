@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.fletchmckee.ktjni
 
-import com.android.build.api.variant.AndroidComponentsExtension
-import com.android.build.api.variant.ComponentIdentity
-import com.android.build.api.variant.HasAndroidTest
-import com.android.build.api.variant.HasUnitTest
 import io.github.fletchmckee.ktjni.internal.PluginId
+import io.github.fletchmckee.ktjni.internal.configureAndroidVariants
+import io.github.fletchmckee.ktjni.internal.configureKotlinAndroid
+import io.github.fletchmckee.ktjni.internal.configureKotlinJvm
+import io.github.fletchmckee.ktjni.internal.configureKotlinMultiplatform
 import io.github.fletchmckee.ktjni.tasks.KtjniTask
-import io.github.fletchmckee.ktjni.util.taskSuffix
+import io.github.fletchmckee.ktjni.util.GROUP
 import io.github.fletchmckee.ktjni.util.titleCase
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -19,11 +19,6 @@ import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.scala.ScalaCompile
-import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
-import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
-import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
-import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
-import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompile
 
 @Suppress("unused") // Invoked reflectively
 public class KtjniPlugin : Plugin<Project> {
@@ -54,50 +49,11 @@ public class KtjniPlugin : Plugin<Project> {
     aggregate: ConfigurableFileCollection,
   ) {
     plugins.withId(PluginId.AndroidApplication.id) {
-      val androidExtension = extensions.getByType(AndroidComponentsExtension::class.java)
-      androidExtension.onVariants { variant ->
-        configureAndroidVariant(variant, headerOutputDir, aggregate)
-        (variant as? HasUnitTest)?.unitTest?.let {
-          configureAndroidVariant(it, headerOutputDir, aggregate)
-        }
-        (variant as? HasAndroidTest)?.androidTest?.let {
-          configureAndroidVariant(it, headerOutputDir, aggregate)
-        }
-      }
+      configureAndroidVariants(headerOutputDir, aggregate)
     }
 
     plugins.withId(PluginId.AndroidLibrary.id) {
-      val androidExtension = extensions.getByType(AndroidComponentsExtension::class.java)
-      androidExtension.onVariants { variant ->
-        configureAndroidVariant(variant, headerOutputDir, aggregate)
-        (variant as? HasUnitTest)?.unitTest?.let {
-          configureAndroidVariant(it, headerOutputDir, aggregate)
-        }
-        (variant as? HasAndroidTest)?.androidTest?.let {
-          configureAndroidVariant(it, headerOutputDir, aggregate)
-        }
-      }
-    }
-  }
-
-  private fun Project.configureAndroidVariant(
-    variant: ComponentIdentity,
-    headerOutputDir: DirectoryProperty,
-    aggregate: ConfigurableFileCollection,
-  ) {
-    // Generally trying to avoid string matching for task types, but this is a pattern you'll see in other plugins like room-gradle-plugin
-    // See AndroidPluginIntegration.kt
-    val compileTaskName = "compile${variant.name.titleCase}JavaWithJavac"
-    tasks.withType(JavaCompile::class.java).all {
-      if (name == compileTaskName) {
-        val compileTaskProvider = tasks.named(compileTaskName, JavaCompile::class.java)
-        registerJavaHeaderTask(
-          sourceSetName = variant.name,
-          compileTaskProvider = compileTaskProvider,
-          headerOutputDir = headerOutputDir,
-          aggregate = aggregate,
-        )
-      }
+      configureAndroidVariants(headerOutputDir, aggregate)
     }
   }
 
@@ -107,44 +63,17 @@ public class KtjniPlugin : Plugin<Project> {
   ) {
     // Kotlin Multiplatform
     plugins.withId(PluginId.KotlinMultiplatform.id) {
-      val kotlinExtension = extensions.getByType(KotlinMultiplatformExtension::class.java)
-      kotlinExtension.targets.all {
-        compilations.all {
-          // The only KMP platforms we need registrations for are `jvm` or `androidJvm`.
-          if (platformType.name == "jvm" || platformType.name == "androidJvm") {
-            registerKotlinCompilationHeaderTask(
-              compilation = this,
-              headerOutputDir = headerOutputDir,
-              aggregate = aggregate,
-              target = target.name,
-            )
-          }
-        }
-      }
+      configureKotlinMultiplatform(headerOutputDir, aggregate)
     }
 
     // Kotlin JVM
     plugins.withId(PluginId.KotlinJvm.id) {
-      val kotlinExtension = extensions.getByType(KotlinJvmProjectExtension::class.java)
-      kotlinExtension.target.compilations.all {
-        registerKotlinCompilationHeaderTask(
-          compilation = this,
-          headerOutputDir = headerOutputDir,
-          aggregate = aggregate,
-        )
-      }
+      configureKotlinJvm(headerOutputDir, aggregate)
     }
 
     // Kotlin Android
     plugins.withId(PluginId.KotlinAndroid.id) {
-      val kotlinExtension = extensions.getByType(KotlinAndroidProjectExtension::class.java)
-      kotlinExtension.target.compilations.all {
-        registerKotlinCompilationHeaderTask(
-          compilation = this,
-          headerOutputDir = headerOutputDir,
-          aggregate = aggregate,
-        )
-      }
+      configureKotlinAndroid(headerOutputDir, aggregate)
     }
   }
 
@@ -183,34 +112,6 @@ public class KtjniPlugin : Plugin<Project> {
         )
       }
     }
-  }
-
-  private fun Project.registerKotlinCompilationHeaderTask(
-    compilation: KotlinCompilation<*>,
-    headerOutputDir: DirectoryProperty,
-    aggregate: ConfigurableFileCollection,
-    target: String = "", // For Kotlin Multiplatform
-  ) {
-    val taskSuffix = compilation.name.taskSuffix(target)
-    val taskName = "generateKotlin${taskSuffix.titleCase}JniHeaders"
-
-    val generateJniHeadersTask = tasks.register(taskName, KtjniTask::class.java) {
-      sourceDir.set(
-        compilation.compileTaskProvider.flatMap { compileTask ->
-          (compileTask as AbstractKotlinCompile<*>).destinationDirectory
-        },
-      )
-      outputDir.set(headerOutputDir.map { it.dir("kotlin/$taskSuffix") })
-
-      group = GROUP
-      description = "Generates Kotlin JNI headers from class files for ${compilation.name} compilation"
-
-      doFirst {
-        logger.info("Ktjni - running $taskName")
-      }
-    }
-
-    aggregate.from(generateJniHeadersTask.flatMap { it.outputDir })
   }
 
   private fun Project.registerJavaHeaderTask(
@@ -262,9 +163,5 @@ public class KtjniPlugin : Plugin<Project> {
     }
 
     aggregate.from(generateJniHeadersTask.flatMap { it.outputDir })
-  }
-
-  internal companion object {
-    internal const val GROUP = "ktjni"
   }
 }
