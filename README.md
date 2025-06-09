@@ -40,7 +40,7 @@ pluginManagement {
 
 ```gradle
 plugins {
-  id("io.github.fletchmckee.ktjni") version "0.0.1-rc01"
+  id("io.github.fletchmckee.ktjni") version "0.1.0"
 }
 ```
 
@@ -51,13 +51,13 @@ plugins {
 ```
 
 > [!NOTE]
-> The above command is an aggregate task, so it will run for all variants. Because header generation depends on `.class` files, this will
-> also execute all of the relevant compilation tasks. For a more fine-grained approach, you can discover the relevant Ktjni commands by
-> running the following:
+> The above command is an aggregate task that triggers all variant-specific JNI header tasks. Because header generation depends on `.class`
+> files, running this task will also compile the corresponding source sets if not already compiled.
+> For a more fine-grained approach, you can discover the relevant Ktjni commands by running the following:
 > ```console
 > ./gradlew tasks --group "ktjni"
 > ```
-> And then you can run the relevant tasks based on the above output.
+> And then you can select the relevant tasks based on the above output.
 
 ## Example
 

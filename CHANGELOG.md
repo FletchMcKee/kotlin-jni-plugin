@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.1.0] - 2025-06-09
+
+Initial Release
+
 ## [0.0.1-rc01] - 2025-06-09
 
 Changed:
@@ -38,7 +42,8 @@ Changed:
 
 Initial (alpha) Release
 
-[Unreleased]: https://github.com/fletchmckee/ktjni/compare/0.0.1-rc01...HEAD
+[Unreleased]: https://github.com/fletchmckee/ktjni/compare/0.1.0...HEAD
+[0.1.0]: https://github.com/fletchmckee/ktjni/releases/tag/0.1.0
 [0.0.1-rc01]: https://github.com/fletchmckee/ktjni/releases/tag/0.0.1-rc01
 [0.0.1-beta03]: https://github.com/fletchmckee/ktjni/releases/tag/0.0.1-beta03
 [0.0.1-beta02]: https://github.com/fletchmckee/ktjni/releases/tag/0.0.1-beta02
