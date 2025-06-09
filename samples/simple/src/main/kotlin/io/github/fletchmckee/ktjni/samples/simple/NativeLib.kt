@@ -12,6 +12,7 @@ class NativeLib {
     const val VERSION = 42
     const val PI = 3.14159
     const val ENABLED = true
+    const val DISABLED = false
     const val RATIO = 2.5f
     const val MAX_VALUE = 9223372036854775807L
     const val NAME = "NativeLib"

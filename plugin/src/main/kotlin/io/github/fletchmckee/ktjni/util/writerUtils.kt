@@ -145,33 +145,26 @@ internal val FieldNode.jniConstant: String?
     val value = this.value ?: return null
 
     return when (desc) {
-      "Z" -> {
-        // For boolean fields, ASM provides the value as Int (0 or 1)
-        when (value) {
-          is Int -> if (value.toInt() != 0) "1L" else "0L"
-          else -> null
-        }
-      }
+      // For boolean fields, ASM provides the value as Int (0 or 1)
+      "Z" -> if (value is Int && value != 0) "1L" else "0L"
       "B", // Byte
       "S", // Short
       "I", // Int
-      -> "$value" + "L"
-      "J" -> "$value" + if (isWindows) "i64" else "LL" // Long
-      "C" -> "${(value as? Int)?.toInt()?.and(0xffff)}L" // Char (as integer code point)
+      -> "${value}L"
+      "J" -> "$value${if (isWindows) "i64" else "LL"}" // Long
+      "C" -> "${(value as Int) and 0xffff}L" // Char (as integer code point)
       "F" -> { // Float
         val fv = value as Float
-        if (fv.isInfinite()) {
-          (if (fv < 0) "-" else "") + "Inff"
-        } else {
-          "$value" + "f"
+        when {
+          fv.isInfinite() -> if (fv < 0) "-Inff" else "Inff"
+          else -> "${fv}f"
         }
       }
       "D" -> { // Double
         val d = value as Double
-        if (d.isInfinite()) {
-          (if (d < 0) "-" else "") + "InfD"
-        } else {
-          "$value"
+        when {
+          d.isInfinite() -> if (d < 0) "-InfD" else "InfD"
+          else -> d.toString()
         }
       }
       "Ljava/lang/String;" -> "\"$value\"" // String
