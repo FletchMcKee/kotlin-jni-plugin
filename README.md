@@ -31,7 +31,7 @@ Since all JVM languages compile native method declarations to the same core byte
 pluginManagement {
   repositories {
     mavenCentral() // Release versions
-    maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots") } // SNAPSHOT Versions
+    maven { url = uri("https://central.sonatype.com/repository/maven-snapshots/") } // SNAPSHOT versions
   }
 }
 ```
@@ -40,7 +40,7 @@ pluginManagement {
 
 ```gradle
 plugins {
-  id("io.github.fletchmckee.ktjni") version "0.0.1-beta03"
+  id("io.github.fletchmckee.ktjni") version "0.0.1-rc01"
 }
 ```
 

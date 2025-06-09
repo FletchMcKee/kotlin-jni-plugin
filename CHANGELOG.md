@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [0.0.1-rc01] - 2025-06-09
+
+Changed:
+
+- Added more test cases.
+- Performance improvements in the JNI writer logic.
+
 ## [0.0.1-beta03] - 2025-06-08
 
 Changed:
@@ -31,7 +38,8 @@ Changed:
 
 Initial (alpha) Release
 
-[Unreleased]: https://github.com/fletchmckee/ktjni/compare/0.0.1-beta03...HEAD
+[Unreleased]: https://github.com/fletchmckee/ktjni/compare/0.0.1-rc01...HEAD
+[0.0.1-rc01]: https://github.com/fletchmckee/ktjni/releases/tag/0.0.1-rc01
 [0.0.1-beta03]: https://github.com/fletchmckee/ktjni/releases/tag/0.0.1-beta03
 [0.0.1-beta02]: https://github.com/fletchmckee/ktjni/releases/tag/0.0.1-beta02
 [0.0.1-beta01]: https://github.com/fletchmckee/ktjni/releases/tag/0.0.1-beta01
