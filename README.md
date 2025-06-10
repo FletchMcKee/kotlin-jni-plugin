@@ -12,18 +12,13 @@ Since all JVM languages compile native method declarations to the same core byte
 > [!NOTE]
 > Header generation currently requires manual execution and does not automatically integrate with the build process.
 >
-> Currently the headers are generated in the project's build directory at the following path:
-> ```
-> {project.projectDir}/build/generated/ktjni/{sourceType}/{sourceSet}
-> ```
->
 > **CI/CD Usage:** You can add header generation as a build step in your pipelines:
 > ```yml
 > - name: Generate JNI headers
 >   run: ./gradlew generateJniHeaders
 > ```
 
-## Getting started
+## Getting Started
 
 **1. Add Maven Central to your pluginManagement repositories**
 
@@ -36,15 +31,28 @@ pluginManagement {
 }
 ```
 
-**2. Add the Ktjni plugin to your project's build.gradle.kts**
+**2. Add the Ktjni plugin to your project's build.gradle.kts and choose your header output directory location (optional)**
 
 ```gradle
 plugins {
   id("io.github.fletchmckee.ktjni") version "0.1.0"
 }
+
+ktjni {
+  // Optional
+  outputDir = layout.buildDirectory.dir("custom")
+}
 ```
 
-**3. Run the following aggregate command to generate JNI headers for any files containing external native methods for all variants**
+**Note:** If no `outputDir` is specified, it defaults to the following location:
+```
+{projectDir}/build/generated/ktjni/{sourceType}/{sourceSet}
+```
+
+Whether using the default `outputDir` or a custom location, the `sourceType` and `sourceSet` are added as subdirectories for configuration cache correctness.
+
+## Usage
+**Run the following aggregate command to generate JNI headers for any files containing external native methods for all variants**
 
 ```console
 ./gradlew generateJniHeaders
@@ -57,7 +65,10 @@ plugins {
 > ```console
 > ./gradlew tasks --group "ktjni"
 > ```
-> And then you can select the relevant tasks based on the above output.
+> And then you can select the relevant tasks based on the above output. For example:
+> ```console
+> ./gradlew :app:generateKotlinReleaseJniHeaders
+> ```
 
 ## Example
 
