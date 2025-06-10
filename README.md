@@ -1,4 +1,10 @@
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.fletchmckee.ktjni/ktjni-plugin)](https://search.maven.org/search?q=g:io.github.fletchmckee.ktjni) ![Build status](https://github.com/fletchmckee/ktjni/actions/workflows/build.yml/badge.svg)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.fletchmckee.ktjni/ktjni-plugin)](https://search.maven.org/search?q=g:io.github.fletchmckee.ktjni) 
+![Build status](https://github.com/fletchmckee/ktjni/actions/workflows/build.yml/badge.svg)
+
+![Kotlin](https://img.shields.io/badge/Kotlin-7F52FF?style=flat&logo=kotlin&logoColor=white)
+![Android](https://img.shields.io/badge/Android-3DDC84?style=flat&logo=android&logoColor=white)
+![Java](https://img.shields.io/badge/Java-ED8B00?style=flat&logo=openjdk&logoColor=white)
+![Scala](https://img.shields.io/badge/Scala-DC322F?style=flat&logo=scala&logoColor=white)
 
 
 # Ktjni
@@ -31,7 +37,7 @@ pluginManagement {
 }
 ```
 
-**2. Add the Ktjni plugin to your project's build.gradle.kts and choose your header output directory location (optional)**
+**2. Add the Ktjni plugin to your project's build.gradle.kts and choose your header output directory location**
 
 ```gradle
 plugins {
