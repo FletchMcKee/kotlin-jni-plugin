@@ -4,24 +4,20 @@
     'config:recommended',
   ],
   ignorePresets: [
-    // Get latest version and are not pinned to old versions.
-    // Credit https://jakewharton.com/using-renovate-to-update-build-jdk/
     'workarounds:javaLTSVersions',
   ],
   customManagers: [
-    // Update .java-version file with the latest JDK version.
     {
       customType: 'regex',
-      fileMatch: [
-        '\\.java-version$',
+      managerFilePatterns: [
+        '/\\.java-version$/',
       ],
       matchStrings: [
         '(?<currentValue>.*)\\n',
       ],
       datasourceTemplate: 'java-version',
       depNameTemplate: 'java',
-      // Only write the major version.
       extractVersionTemplate: '^(?<version>\\d+)',
     },
-  ]
+  ],
 }
