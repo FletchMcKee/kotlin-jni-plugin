@@ -26,9 +26,5 @@ class NativeLib {
 
     // Not a constant - verify it isn't in the JNI header
     val runtimeValue = System.currentTimeMillis()
-
-    init {
-      System.loadLibrary("simple")
-    }
   }
 }
